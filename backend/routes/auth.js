@@ -74,14 +74,38 @@ router.post('/register', async (req, res) => {
 // Register new admin
 router.post('/register-admin', async (req, res) => {
   try {
-    const { name, email, password, college_id } = req.body;
+    const { name, email, password, collegeDomain } = req.body;
 
-    if (!name || !email || !password || !college_id) {
+    if (!name || !email || !password || !collegeDomain) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Check if admin already exists
-    const { data: existing, error: existingError } = await supabase
+    // 1. Find or create the college
+    let { data: college, error: collegeError } = await supabase
+      .from('colleges')
+      .select('*')
+      .eq('domain', collegeDomain)
+      .single();
+
+    if (collegeError && collegeError.code !== 'PGRST116') { // PGRST116: No rows found
+      return res.status(400).json({ error: 'Error checking college', details: collegeError.message });
+    }
+
+    if (!college) {
+      // Create the college
+      const { data: newCollege, error: createError } = await supabase
+        .from('colleges')
+        .insert([{ name: collegeDomain, domain: collegeDomain }])
+        .select()
+        .single();
+      if (createError) {
+        return res.status(400).json({ error: 'Error creating college', details: createError.message });
+      }
+      college = newCollege;
+    }
+
+    // 2. Check if admin already exists
+    const { data: existing } = await supabase
       .from('admins')
       .select('id')
       .eq('email', email)
@@ -91,31 +115,30 @@ router.post('/register-admin', async (req, res) => {
       return res.status(409).json({ error: 'Admin with this email already exists' });
     }
 
-    // Hash password
+    // 3. Hash password
     const password_hash = await bcrypt.hash(password, 10);
 
-    // Insert admin
-    const { data, error } = await supabase
+    // 4. Insert admin
+    const { data: admin, error: adminError } = await supabase
       .from('admins')
       .insert([
         {
-          id: uuidv4(),
           name,
           email,
           password_hash,
-          college_id
+          college_id: college.id
         }
       ])
       .select()
       .single();
 
-    if (error) {
-      return res.status(400).json({ error: 'Registration failed', details: error.message });
+    if (adminError) {
+      return res.status(400).json({ error: 'Registration failed', details: adminError.message });
     }
 
-    // Generate JWT
+    // 5. Generate JWT
     const token = jwt.sign(
-      { userId: data.id, email: data.email, userType: 'admin' },
+      { userId: admin.id, email: admin.email, userType: 'admin' },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
@@ -123,10 +146,10 @@ router.post('/register-admin', async (req, res) => {
     res.status(201).json({
       message: 'Admin registered successfully',
       admin: {
-        id: data.id,
-        name: data.name,
-        email: data.email,
-        college_id: data.college_id
+        id: admin.id,
+        name: admin.name,
+        email: admin.email,
+        college_id: admin.college_id
       },
       token
     });

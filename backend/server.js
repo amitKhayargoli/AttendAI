@@ -9,8 +9,19 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',')
+  : ['http://localhost:5000'];
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json());
@@ -25,13 +36,6 @@ app.get('/', (req, res) => {
   });
 });
 
-// Health check route
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK',
-    timestamp: new Date().toISOString()
-  });
-});
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -56,7 +60,6 @@ app.use('*', (req, res) => {
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
 });
 
