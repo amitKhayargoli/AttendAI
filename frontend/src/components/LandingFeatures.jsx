@@ -41,7 +41,7 @@ const LandingFeatures = () => {
               <img
                 src={"/attendance.png"}
                 alt="attendance Interface"
-                className="w-full max-w-xs sm:max-w-sm md:max-w-md h-40 sm:h-52 md:h-60 object-cover rounded-3xl"
+                className="w-70 h-60 max-w-xs sm:max-w-sm md:max-w-md h-40 sm:h-52 md:h-60 object-cover rounded-3xl"
               />
             </div>
           </div>
@@ -63,7 +63,7 @@ const LandingFeatures = () => {
               <img
                 src={"/mweb.png"}
                 alt="Mobile & Web Access Interface"
-                className="w-full max-w-xs sm:max-w-sm md:max-w-md h-40 sm:h-52 md:h-60 object-cover rounded-3xl"
+                className="w-70 h-60 max-w-xs sm:max-w-sm md:max-w-md h-40 sm:h-52 md:h-60 object-cover rounded-3xl"
               />
             </div>
           </div>
@@ -87,7 +87,7 @@ const LandingFeatures = () => {
               <img
                 src={"/calender.png"}
                 alt="Calendar Interface"
-                className="w-full max-w-xs sm:max-w-sm md:max-w-md h-40 sm:h-52 md:h-60 object-cover rounded-xl"
+                className="w-full h-70 max-w-xs sm:max-w-sm md:max-w-md h-40 sm:h-52 md:h-60 object-cover rounded-xl"
               />
             </div>
           </div>
