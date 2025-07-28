@@ -162,11 +162,38 @@ router.post('/register-admin', async (req, res) => {
 // Login user
 router.post('/login', async (req, res) => {
   try {
-    const { email, password, userType } = req.body;
+    const { email, password } = req.body;
 
-    // Validate required fields
-    if (!email || !password || !userType) {
+    if (!email || !password) {
       return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Infer userType from email (using .includes)
+    let userType;
+    const lowerEmail = email.toLowerCase();
+    if (lowerEmail.includes('admin')) {
+      userType = 'admin';
+    } else if (lowerEmail.includes('faculty') || lowerEmail.includes('teacher')) {
+      userType = 'teacher';
+    } else if (lowerEmail.includes('student')) {
+      userType = 'student';
+    } else {
+      // fallback: try all user tables in order
+      const tables = ['admins', 'teachers', 'students'];
+      for (const table of tables) {
+        const { data: user, error } = await supabase
+          .from(table)
+          .select('*')
+          .eq('email', email)
+          .single();
+        if (user) {
+          userType = table.slice(0, -1); // remove 's'
+          break;
+        }
+      }
+      if (!userType) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
     }
 
     // Get user from database
@@ -206,6 +233,58 @@ router.post('/login', async (req, res) => {
 
   } catch (error) {
     console.error('Login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Admin login with college domain
+router.post('/admin-login', async (req, res) => {
+  try {
+    const { collegeDomain, password } = req.body;
+
+    if (!collegeDomain || !password) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const email = `admin@${collegeDomain}.edu.np`;
+
+    // Get admin from database
+    const { data: admin, error } = await supabase
+      .from('admins')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (error || !admin) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, admin.password_hash);
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: admin.id, email: admin.email, userType: 'admin' },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN }
+    );
+
+    res.json({
+      message: 'Login successful',
+      admin: {
+        id: admin.id,
+        name: admin.name,
+        email: admin.email,
+        college_id: admin.college_id
+      },
+      token
+    });
+
+  } catch (error) {
+    console.error('Admin login error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
