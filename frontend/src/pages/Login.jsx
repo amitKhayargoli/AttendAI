@@ -9,7 +9,7 @@ export default function Login() {
     <div className="flex w-full h-screen justify-center items-center">
       <Card className="overflow-hidden !py-0 !border-none w-[720px]">
         <CardContent className="grid !p-0 md:grid-cols-2">
-          <form className="p-11 md:p-16 w-full">
+          <form className="p-12 md:p-16 w-full">
             <div className="flex flex-col gap-6">
               <div className="flex flex-col items-center text-center">
                 <h1 className="text-2xl font-bold">AttendAI</h1>
