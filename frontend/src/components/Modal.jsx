@@ -1,7 +1,7 @@
 import React from "react";
 import { Dialog, Transition } from "@headlessui/react";
 
-const AddSubjectModal = ({ isOpen, onClose, onSubmit, form, onChange }) => (
+const Modal = ({ title, isOpen, onClose, onSubmit, form, onChange, buttonText }) => (
   <Transition show={isOpen} as={React.Fragment}>
     <Dialog as="div" className="relative z-50" onClose={onClose}>
       <Transition.Child
@@ -13,7 +13,11 @@ const AddSubjectModal = ({ isOpen, onClose, onSubmit, form, onChange }) => (
         leaveFrom="opacity-100"
         leaveTo="opacity-0"
       >
-        <div className="fixed inset-0 bg-black bg-opacity-20" />
+        {/* Use a transparent background with a blur effect for exposure */}
+        <div
+          className="fixed inset-0 bg-[#0000005a] "
+         
+        />
       </Transition.Child>
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <Transition.Child
@@ -27,7 +31,7 @@ const AddSubjectModal = ({ isOpen, onClose, onSubmit, form, onChange }) => (
         >
           <Dialog.Panel className="mx-auto w-full max-w-sm rounded-xl bg-white p-6 shadow-lg">
             <Dialog.Title className="text-lg font-semibold mb-4">
-              Add New Subject
+              {title}
             </Dialog.Title>
             <form className="flex flex-col gap-4" onSubmit={onSubmit}>
               <div>
@@ -37,7 +41,7 @@ const AddSubjectModal = ({ isOpen, onClose, onSubmit, form, onChange }) => (
                   name="name"
                   value={form.name}
                   onChange={onChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border rounded px-2 py-2"
                   placeholder="Enter subject name"
                   required
                 />
@@ -49,7 +53,7 @@ const AddSubjectModal = ({ isOpen, onClose, onSubmit, form, onChange }) => (
                   name="code"
                   value={form.code}
                   onChange={onChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border rounded px-2 py-2"
                   placeholder="e.g., CS101"
                   required
                 />
@@ -60,7 +64,7 @@ const AddSubjectModal = ({ isOpen, onClose, onSubmit, form, onChange }) => (
                   name="teacher"
                   value={form.teacher}
                   onChange={onChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border rounded px-2 py-2"
                   required
                 >
                   <option value="">Select teacher</option>
@@ -80,7 +84,7 @@ const AddSubjectModal = ({ isOpen, onClose, onSubmit, form, onChange }) => (
                   name="level"
                   value={form.level}
                   onChange={onChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border rounded px-2 py-2"
                   required
                 >
                   <option value="">Select level</option>
@@ -90,9 +94,9 @@ const AddSubjectModal = ({ isOpen, onClose, onSubmit, form, onChange }) => (
               </div>
               <button
                 type="submit"
-                className="bg-purple-400 text-white rounded py-2 mt-2 font-semibold hover:bg-purple-500 transition"
+                className="bg-[#9886fe] text-white rounded py-2 mt-2 font-semibold hover:bg-purple-500 transition"
               >
-                Add Subject
+                {buttonText}
               </button>
             </form>
           </Dialog.Panel>
@@ -102,4 +106,4 @@ const AddSubjectModal = ({ isOpen, onClose, onSubmit, form, onChange }) => (
   </Transition>
 );
 
-export default AddSubjectModal;
+export default Modal;

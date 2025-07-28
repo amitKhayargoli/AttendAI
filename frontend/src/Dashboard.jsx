@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Sidebar from "./Sidebar";
 import { DataTable } from "./components/data-table";
-import AddSubjectModal from "./components/AddSubjectModel";
+import Modal from "./components/Modal";
 
 const columns = [
   { accessorKey: "name", header: "Subject Name" },
@@ -174,7 +174,7 @@ const Dashboard = () => {
                 </select>
               </div>
               <button
-                className="text-purple-400 font-semibold mt-2 md:mt-0"
+                className="text-[#9886fe] font-semibold mt-2 md:mt-0"
                 onClick={handleOpenModal}
               >
                 + Add New
@@ -185,12 +185,14 @@ const Dashboard = () => {
         </div>
 
         {/* Modal */}
-        <AddSubjectModal
+        <Modal
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           form={form}
+          title="Add New Subject"
           onChange={handleChange}
           onSubmit={handleAddSubject}
+          buttonText="Add Subject"
         />
       </div>
     </div>
