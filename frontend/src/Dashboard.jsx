@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import Sidebar from "./Sidebar";
 import { DataTable } from "./components/data-table";
 import Modal from "./components/Modal";
+import { ChevronDown } from "lucide-react";
+import { Avatar, AvatarImage } from "./components/ui/avatar";
 
 const columns = [
   { accessorKey: "name", header: "Subject Name" },
@@ -133,16 +135,13 @@ const Dashboard = () => {
   return (
     <div className="flex min-h-screen bg-[#F4F4F4]">
       <Sidebar />
-      <div className="flex flex-col w-full">
-        <nav className="flex py-5 w-full justify-end px-4 md:px-8">
+      <div className="flex flex-col flex-2">
+        <nav className="flex py-5 w-full justify-between items-center px-5 bg-white">
+          <div>
+            <h1 className="text-xl font-medium text-black">Dashboard</h1>
+          </div>
           <div className="flex gap-2">
-            <img
-              src="image.png"
-              width={40}
-              height={40}
-              alt=""
-              className="rounded-full"
-            />
+            <img src="image.png" width={30} height={30} alt="" />
           </div>
         </nav>
 
