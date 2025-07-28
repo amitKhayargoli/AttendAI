@@ -1,6 +1,7 @@
 import React from "react";
 import Sidebar from "./Sidebar";
 import { ChevronDown } from "lucide-react";
+import { Avatar, AvatarImage } from "./components/ui/avatar";
 
 const Dashboard = () => {
   return (
@@ -15,9 +16,12 @@ const Dashboard = () => {
       <Sidebar />
 
       <div className="flex flex-col flex-2">
-        <nav className="flex py-5 w-full  justify-end">
+        <nav className="flex py-5 w-full justify-between items-center px-5 bg-white">
+
+
+          <div><h1 className="text-xl font-medium text-black">Dashboard</h1></div>
           <div className="flex gap-2">
-            <img src="image.png" width={50} height={50} alt="" />
+            <img src="image.png" width={30} height={30} alt="" />
           </div>
         </nav>
 
