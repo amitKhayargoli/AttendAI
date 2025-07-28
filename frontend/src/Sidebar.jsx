@@ -84,11 +84,11 @@ const Sidebar = () => {
       <div
         className={`${
           sidebarCollapsed ? "w-16" : "w-55"
-        } py-5 px-5 transition-all duration-300 ease-in-out`}
+        } py-5 px-5 transition-all duration-300 ease-in-out bg-white`}
       >
-        <span className="flex justify-between items-center h-10">
+        <span className="flex justify-between items-center h-10 mb-5">
           <h1
-            className={`text-[#FBBF24] font-bold text-xl ${
+            className={`text-[#9886FE] font-bold text-xl ml-5 ${
               sidebarCollapsed ? "hidden" : "block"
             }`}
           >
@@ -148,7 +148,7 @@ const SidebarItem = ({ icon, label, collapsed, isActive, onClick }) => {
         collapsed ? "justify-center" : "justify-start"
       } ${
         isActive
-          ? "bg-[#FBBF24] text-black rounded-[12px]"
+          ? "bg-[#9886FE] text-black rounded-[12px]"
           : "hover:bg-gray-100"
       }`}
       onClick={onClick}
