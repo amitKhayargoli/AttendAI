@@ -8,7 +8,8 @@ const Dashboard = () => {
       className="min-h-screen flex"
       style={{
         background:
-          "conic-gradient(from 180deg at 50% 50%, #FDBD16 0deg, #FFFFFF 138.46deg, #FDBD16 360deg)",
+          // "conic-gradient(from 180deg at 50% 50%, #FDBD16 0deg, #FFFFFF 138.46deg, #FDBD16 360deg)",
+          "#F4F4F4",
       }}
     >
       <Sidebar />
