@@ -9,7 +9,7 @@ import Dashboard from "./Dashboard";
 import Login from "./pages/login";
 import Signup from "./pages/Signup";
 import AdminDashboard from "./pages/AdminDashboard";
-import Landing from "./pages/Landing";
+import Landing from "./pages/LandingPage";
 function App() {
   return (
     <Router>
