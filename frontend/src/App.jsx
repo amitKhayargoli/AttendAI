@@ -5,6 +5,7 @@ import Login from "./pages/login";
 import Signup from "./pages/Signup";
 import AdminDashboard from "./pages/AdminDashboard";
 import Students from "./pages/Students";
+import Teachers from "./pages/Teachers";
 import { useState } from "react";
 
 function App() {
@@ -17,8 +18,9 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/dashboard" element={<Dashboard/>} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/students" element={<Students />} />
+                      <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/students" element={<Students />} />
+              <Route path="/teachers" element={<Teachers />} />
       </Routes>
     </Router>
   );
