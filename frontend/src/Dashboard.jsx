@@ -1,5 +1,5 @@
 import React from "react";
-import Sidebar from "./Sidebar";
+import Sidebar from "./components/StudentSidebar";
 import { ChevronDown } from "lucide-react";
 import { Avatar, AvatarImage } from "./components/ui/avatar";
 
