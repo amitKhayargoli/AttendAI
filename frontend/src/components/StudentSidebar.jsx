@@ -67,7 +67,7 @@ const AttendanceIcon = () => (
   </svg>
 );
 
-const Sidebar = () => {
+const StudentSidebar = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("Dashboard");
 
@@ -122,13 +122,6 @@ const Sidebar = () => {
             onClick={() => handleTabClick("Attendance")}
           />
           <SidebarItem
-            icon={<Calendar />}
-            label="Calendar"
-            collapsed={sidebarCollapsed}
-            isActive={activeTab === "Calendar"}
-            onClick={() => handleTabClick("Calendar")}
-          />
-          <SidebarItem
             icon={<Settings />}
             label="Settings"
             collapsed={sidebarCollapsed}
@@ -165,4 +158,4 @@ const SidebarItem = ({ icon, label, collapsed, isActive, onClick }) => {
   );
 };
 
-export default Sidebar;
+export default StudentSidebar;
