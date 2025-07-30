@@ -303,23 +303,28 @@ const Students = () => {
     try {
       setLoading(true)
       const token = localStorage.getItem('token')
+      const updateData = {
+        name: editingStudent.name.trim(),
+        email: editingStudent.email.trim(),
+        course: editingStudent.course,
+        contact: editingStudent.contact,
+        enrollment_date: editingStudent.enrollment_date
+      }
+      console.log('Sending update data:', updateData)
+      console.log('Student ID:', editingStudent.id)
+      
       const response = await fetch(`${API_BASE_URL}/student/${editingStudent.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          name: editingStudent.name.trim(),
-          email: editingStudent.email.trim(),
-          course: editingStudent.course,
-          contact: editingStudent.contact,
-          enrollment_date: editingStudent.enrollment_date
-        })
+        body: JSON.stringify(updateData)
       })
 
       if (!response.ok) {
         const errorData = await response.json()
+        console.error('Update error response:', errorData)
         throw new Error(errorData.error || 'Failed to update student')
       }
 
@@ -658,7 +663,7 @@ const Students = () => {
 
       {/* Edit Student Modal */}
       {showEditModal && editingStudent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-[#05050560] bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Edit Student</h3>

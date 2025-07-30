@@ -203,6 +203,9 @@ router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { name, email, course, contact, enrollment_date } = req.body;
+    
+    console.log('Update request for student ID:', id);
+    console.log('Update data:', { name, email, course, contact, enrollment_date });
 
     // Validate required fields
     if (!name || !email || !course || !contact || !enrollment_date) {
@@ -220,13 +223,13 @@ router.put('/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Student not found' });
     }
 
-    // Check if email is already taken by another student
+    // Check if email is already taken by another student (excluding current student)
     const { data: emailCheck, error: emailError } = await supabase
       .from('students')
       .select('id')
       .eq('email', email)
       .neq('id', id)
-      .single();
+      .maybeSingle();
 
     if (emailCheck) {
       return res.status(409).json({ error: 'Email already taken by another student' });
@@ -240,16 +243,15 @@ router.put('/:id', authenticateToken, async (req, res) => {
         email: email.toLowerCase(),
         course,
         contact,
-        enrollment_date,
-        updated_at: new Date().toISOString()
+        enrollment_date
       })
       .eq('id', id)
-      .select('id, name, email, course, contact, enrollment_date, updated_at')
+      .select('id, name, email, course, contact, enrollment_date, created_at')
       .single();
 
     if (updateError) {
       console.error('Student update error:', updateError);
-      return res.status(400).json({ error: 'Failed to update student' });
+      return res.status(400).json({ error: 'Failed to update student', details: updateError.message });
     }
 
     res.json({
