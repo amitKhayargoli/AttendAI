@@ -40,9 +40,11 @@ app.get('/', (req, res) => {
 // Import routes
 const authRoutes = require('./routes/auth');
 const studentRoutes = require('./routes/student');
+const teacherRoutes = require('./routes/teacher');
 // Use routes
 app.use('/api/auth', authRoutes);
 app.use('/api/student', studentRoutes);
+app.use('/api/teacher', teacherRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
