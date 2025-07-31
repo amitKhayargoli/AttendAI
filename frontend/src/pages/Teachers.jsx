@@ -9,7 +9,8 @@ const Teachers = () => {
   const [formData, setFormData] = useState({
     fullName: '',
     contactNumber: '',
-    joinedDate: ''
+    joinedDate: '',
+    personalEmail: ''
   })
 
   const [suggestedEmail, setSuggestedEmail] = useState('john.doe@attendai.edu.np')
@@ -119,6 +120,7 @@ const Teachers = () => {
         const teacherData = {
           name: formData.fullName.trim(),
           email: suggestedEmail,
+          personal_email: formData.personalEmail.trim() || null,
           password: password,
           contact: formData.contactNumber,
           joined_at: formData.joinedDate
@@ -136,7 +138,8 @@ const Teachers = () => {
         setFormData({
           fullName: '',
           contactNumber: '',
-          joinedDate: ''
+          joinedDate: '',
+          personalEmail: ''
         })
         
         setErrors({})
@@ -169,6 +172,7 @@ const Teachers = () => {
       id: teacher.id,
       name: teacher.name,
       email: teacher.email,
+      personal_email: teacher.personal_email,
       contact: teacher.contact,
       joined_at: teacher.joined_at
     })
@@ -204,6 +208,7 @@ const Teachers = () => {
       const updateData = {
         name: editingTeacher.name.trim(),
         email: editingTeacher.email.trim(),
+        personal_email: editingTeacher.personal_email.trim() || null,
         contact: editingTeacher.contact,
         joined_at: editingTeacher.joined_at
       }
@@ -453,6 +458,32 @@ const Teachers = () => {
                   )}
                 </div>
 
+                {/* Personal Email */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Personal Email</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                    <input
+                      type="email"
+                      placeholder="Enter personal email (optional)"
+                      value={formData.personalEmail}
+                      onChange={(e) => {
+                        handleInputChange('personalEmail', e.target.value)
+                        // Clear error when user starts typing
+                        if (errors.personalEmail) {
+                          setErrors(prev => ({ ...prev, personalEmail: '' }))
+                        }
+                      }}
+                      className={`pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#9886FE] focus:border-transparent w-full ${
+                        errors.personalEmail ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                    />
+                  </div>
+                  {errors.personalEmail && (
+                    <p className="mt-1 text-sm text-red-600">{errors.personalEmail}</p>
+                  )}
+                </div>
+
                 {/* Register Teacher Button */}
                 <button
                   onClick={handleRegisterTeacher}
@@ -530,6 +561,7 @@ const Teachers = () => {
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Personal Email</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined Date</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -543,6 +575,9 @@ const Teachers = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {teacher.email}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {teacher.personal_email || '-'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {teacher.contact}
@@ -674,6 +709,22 @@ const Teachers = () => {
                   />
                   {errors.joined_at && (
                     <p className="mt-1 text-sm text-red-600">{errors.joined_at}</p>
+                  )}
+                </div>
+
+                {/* Personal Email */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Personal Email</label>
+                  <input
+                    type="email"
+                    value={editingTeacher.personal_email || ''}
+                    onChange={(e) => setEditingTeacher(prev => ({ ...prev, personal_email: e.target.value }))}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#9886FE] focus:border-transparent ${
+                      errors.personalEmail ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                  />
+                  {errors.personalEmail && (
+                    <p className="mt-1 text-sm text-red-600">{errors.personalEmail}</p>
                   )}
                 </div>
 
