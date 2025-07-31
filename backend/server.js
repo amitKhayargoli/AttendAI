@@ -41,10 +41,15 @@ app.get('/', (req, res) => {
 const authRoutes = require('./routes/auth');
 const studentRoutes = require('./routes/student');
 const teacherRoutes = require('./routes/teacher');
+const subjectRoutes = require('./routes/subject');
+const classRoutes = require('./routes/classes');
+
 // Use routes
 app.use('/api/auth', authRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/teacher', teacherRoutes);
+app.use('/api/subject', subjectRoutes);
+app.use('/api/class', classRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
