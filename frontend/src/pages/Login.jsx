@@ -98,12 +98,12 @@ export default function Login() {
                   <div className="text-green-600 text-center text-sm">{success}</div>
                 )}
 
-                <a
-                  href="#"
+                <Link
+                  to="/reset-password"
                   className="text-center text-sm underline-offset-2 hover:underline"
                 >
                   Forgot your password?
-                </a>
+                </Link>
 
                 <div className="text-center text-sm">
                   Don&apos;t have an account?{" "}
