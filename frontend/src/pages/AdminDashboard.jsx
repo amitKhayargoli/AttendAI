@@ -55,7 +55,7 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen flex" style={{ background: "#f8f9fa" }}>
       <AdminSidebar />
-      <div className="flex flex-col gap-2 flex-2 border-l-2 border-[#E5E7EB]">
+      <div className="flex flex-col gap-2 flex-2">
         <nav className="flex py-3 w-full justify-between items-center px-5 bg-white">
           <div>
             <h1 className="text-md font-medium text-black">Dashboard</h1>

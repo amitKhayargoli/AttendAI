@@ -1,6 +1,6 @@
-import { Settings, X, Users, BookOpen, FileText, BarChart3 } from "lucide-react";
+import { Settings, X, Users, BookOpen, FileText, BarChart3, Calendar } from "lucide-react";
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const DashboardIcon = () => (
   <svg
@@ -53,42 +53,25 @@ const AdminSidebar = () => {
     const saved = localStorage.getItem('sidebarCollapsed');
     return saved ? JSON.parse(saved) : false;
   });
-  const [activeTab, setActiveTab] = useState("Dashboard");
+  const [activeTab, setActiveTab] = useState(() => {
+    const path = window.location.pathname;
+    switch (path) {
+      case "/admin": return "Dashboard";
+      case "/students": return "Students";
+      case "/teachers": return "Teachers";
+      case "/subjects": return "Subjects";
+      case "/classes": return "Classes";
+      case "/attendance": return "Attendance";
+      case "/settings": return "Settings";
+      default: return "Dashboard";
+    }
+  });
   const navigate = useNavigate();
-  const location = useLocation();
 
   // Save collapsed state to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed));
   }, [sidebarCollapsed]);
-
-  // Update active tab based on current route
-  useEffect(() => {
-    const path = location.pathname;
-    switch (path) {
-      case "/admin":
-        setActiveTab("Dashboard");
-        break;
-      case "/students":
-        setActiveTab("Students");
-        break;
-      case "/teachers":
-        setActiveTab("Teachers");
-        break;
-      case "/subjects":
-        setActiveTab("Subjects");
-        break;
-      case "/attendance":
-        setActiveTab("Attendance");
-        break;
-      case "/settings":
-        setActiveTab("Settings");
-        break;
-      default:
-        setActiveTab("Dashboard");
-        break;
-    }
-  }, [location.pathname]);
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
@@ -110,6 +93,9 @@ const AdminSidebar = () => {
         break;
       case "Subjects":
         navigate("/subjects");
+        break;
+      case "Classes":
+        navigate("/classes");
         break;
       case "Attendance":
         navigate("/attendance");
@@ -177,6 +163,13 @@ const AdminSidebar = () => {
             collapsed={sidebarCollapsed}
             isActive={activeTab === "Subjects"}
             onClick={() => handleTabClick("Subjects")}
+          />
+          <SidebarItem
+            icon={<Calendar />}
+            label="Classes"
+            collapsed={sidebarCollapsed}
+            isActive={activeTab === "Classes"}
+            onClick={() => handleTabClick("Classes")}
           />
           <SidebarItem
             icon={<BarChart3 />}
