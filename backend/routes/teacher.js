@@ -25,7 +25,7 @@ const authenticateToken = async (req, res, next) => {
 // Create new teacher
 router.post('/create', authenticateToken, async (req, res) => {
   try {
-    const { name, email, password, contact, joined_at } = req.body;
+    const { name, email, personal_email, password, contact, joined_at } = req.body;
 
     // Validate required fields
     if (!name || !email || !password || !contact || !joined_at) {
@@ -39,6 +39,11 @@ router.post('/create', authenticateToken, async (req, res) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+    // Validate personal email format if provided
+    if (personal_email && !emailRegex.test(personal_email)) {
+      return res.status(400).json({ error: 'Invalid personal email format' });
     }
 
     // Validate password length
@@ -64,6 +69,19 @@ router.post('/create', authenticateToken, async (req, res) => {
       return res.status(409).json({ error: 'Teacher with this email already exists' });
     }
 
+    // Check if personal email is already taken by another teacher
+    if (personal_email) {
+      const { data: existingPersonalEmail, error: personalEmailError } = await supabase
+        .from('teachers')
+        .select('id')
+        .eq('personal_email', personal_email)
+        .single();
+
+      if (existingPersonalEmail) {
+        return res.status(409).json({ error: 'Teacher with this personal email already exists' });
+      }
+    }
+
     // Hash password
     const saltRounds = 10;
     const password_hash = await bcrypt.hash(password, saltRounds);
@@ -87,6 +105,7 @@ router.post('/create', authenticateToken, async (req, res) => {
     const teacherData = {
       name: name.trim(),
       email: email.toLowerCase(),
+      personal_email: personal_email ? personal_email.toLowerCase() : null,
       password_hash,
       contact,
       joined_at: joined_at,
@@ -97,7 +116,7 @@ router.post('/create', authenticateToken, async (req, res) => {
     const { data: newTeacher, error: insertError } = await supabase
       .from('teachers')
       .insert([teacherData])
-      .select('id, name, email, contact, joined_at, college_id, created_at')
+      .select('id, name, email, personal_email, contact, joined_at, college_id, created_at')
       .single();
 
     if (insertError) {
@@ -114,6 +133,7 @@ router.post('/create', authenticateToken, async (req, res) => {
         id: newTeacher.id,
         name: newTeacher.name,
         email: newTeacher.email,
+        personal_email: newTeacher.personal_email,
         contact: newTeacher.contact,
         joined_at: newTeacher.joined_at,
         college_id: newTeacher.college_id,
@@ -151,7 +171,7 @@ router.get('/', authenticateToken, async (req, res) => {
     // Get teachers for this college
     const { data: teachers, error } = await supabase
       .from('teachers')
-      .select('id, name, email, contact, joined_at, created_at')
+      .select('id, name, email, personal_email, contact, joined_at, created_at')
       .eq('college_id', college.id)
       .order('created_at', { ascending: false });
 
@@ -178,7 +198,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
     const { data: teacher, error } = await supabase
       .from('teachers')
-      .select('id, name, email, contact, joined_at, created_at')
+      .select('id, name, email, personal_email, contact, joined_at, created_at')
       .eq('id', id)
       .single();
 
@@ -198,10 +218,10 @@ router.get('/:id', authenticateToken, async (req, res) => {
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, contact, joined_at } = req.body;
+    const { name, email, personal_email, contact, joined_at } = req.body;
     
     console.log('Update request for teacher ID:', id);
-    console.log('Update data:', { name, email, contact, joined_at });
+    console.log('Update data:', { name, email, personal_email, contact, joined_at });
 
     // Validate required fields
     if (!name || !email || !contact || !joined_at) {
@@ -231,17 +251,32 @@ router.put('/:id', authenticateToken, async (req, res) => {
       return res.status(409).json({ error: 'Email already taken by another teacher' });
     }
 
+    // Check if personal email is already taken by another teacher (excluding current teacher)
+    if (personal_email) {
+      const { data: personalEmailCheck, error: personalEmailError } = await supabase
+        .from('teachers')
+        .select('id')
+        .eq('personal_email', personal_email)
+        .neq('id', id)
+        .maybeSingle();
+
+      if (personalEmailCheck) {
+        return res.status(409).json({ error: 'Personal email already taken by another teacher' });
+      }
+    }
+
     // Update teacher
     const { data: updatedTeacher, error: updateError } = await supabase
       .from('teachers')
       .update({
         name: name.trim(),
         email: email.toLowerCase(),
+        personal_email: personal_email ? personal_email.toLowerCase() : null,
         contact,
         joined_at
       })
       .eq('id', id)
-      .select('id, name, email, contact, joined_at, created_at')
+      .select('id, name, email, personal_email, contact, joined_at, created_at')
       .single();
 
     if (updateError) {
@@ -316,7 +351,7 @@ router.get('/search/:query', authenticateToken, async (req, res) => {
     // Search teachers by name, email, or contact
     const { data: teachers, error } = await supabase
       .from('teachers')
-      .select('id, name, email, contact, joined_at, created_at')
+      .select('id, name, email, personal_email, contact, joined_at, created_at')
       .eq('college_id', college.id)
       .or(`name.ilike.%${query}%,email.ilike.%${query}%,contact.ilike.%${query}%`)
       .order('created_at', { ascending: false });

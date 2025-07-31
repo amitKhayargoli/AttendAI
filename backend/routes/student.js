@@ -26,7 +26,7 @@ const authenticateToken = async (req, res, next) => {
 // Create new student
 router.post('/create', authenticateToken, async (req, res) => {
   try {
-    const { name, email, password, course, contact, enrollment_date } = req.body;
+    const { name, email, personal_email, password, course, contact, enrollment_date } = req.body;
 
     // Validate required fields
     if (!name || !email || !password || !course || !contact || !enrollment_date) {
@@ -40,6 +40,11 @@ router.post('/create', authenticateToken, async (req, res) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+    // Validate personal email format if provided
+    if (personal_email && !emailRegex.test(personal_email)) {
+      return res.status(400).json({ error: 'Invalid personal email format' });
     }
 
     // Validate password length
@@ -65,6 +70,19 @@ router.post('/create', authenticateToken, async (req, res) => {
       return res.status(409).json({ error: 'Student with this email already exists' });
     }
 
+    // Check if personal email is already taken by another student
+    if (personal_email) {
+      const { data: existingPersonalEmail, error: personalEmailError } = await supabase
+        .from('students')
+        .select('id')
+        .eq('personal_email', personal_email)
+        .single();
+
+      if (existingPersonalEmail) {
+        return res.status(409).json({ error: 'Student with this personal email already exists' });
+      }
+    }
+
     // Hash password
     const saltRounds = 10;
     const password_hash = await bcrypt.hash(password, saltRounds);
@@ -88,6 +106,7 @@ router.post('/create', authenticateToken, async (req, res) => {
     const studentData = {
       name: name.trim(),
       email: email.toLowerCase(),
+      personal_email: personal_email ? personal_email.toLowerCase() : null,
       password_hash,
       course,
       contact,
@@ -100,7 +119,7 @@ router.post('/create', authenticateToken, async (req, res) => {
     const { data: newStudent, error: insertError } = await supabase
       .from('students')
       .insert([studentData])
-      .select('id, name, email, course, contact, enrollment_date, college_id, created_at')
+      .select('id, name, email, personal_email, course, contact, enrollment_date, college_id, created_at')
       .single();
 
     if (insertError) {
@@ -117,6 +136,7 @@ router.post('/create', authenticateToken, async (req, res) => {
         id: newStudent.id,
         name: newStudent.name,
         email: newStudent.email,
+        personal_email: newStudent.personal_email,
         course: newStudent.course,
         contact: newStudent.contact,
         enrollment_date: newStudent.enrollment_date,
@@ -155,7 +175,7 @@ router.get('/', authenticateToken, async (req, res) => {
     // Get students for this college
     const { data: students, error } = await supabase
       .from('students')
-      .select('id, name, email, course, contact, enrollment_date, created_at')
+      .select('id, name, email, personal_email, course, contact, enrollment_date, created_at')
       .eq('college_id', college.id)
       .order('created_at', { ascending: false });
 
@@ -182,7 +202,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
     const { data: student, error } = await supabase
       .from('students')
-      .select('id, name, email, course, contact, enrollment_date, created_at')
+      .select('id, name, email, personal_email, course, contact, enrollment_date, created_at')
       .eq('id', id)
       .single();
 
@@ -202,10 +222,10 @@ router.get('/:id', authenticateToken, async (req, res) => {
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, course, contact, enrollment_date } = req.body;
+    const { name, email, personal_email, course, contact, enrollment_date } = req.body;
     
     console.log('Update request for student ID:', id);
-    console.log('Update data:', { name, email, course, contact, enrollment_date });
+    console.log('Update data:', { name, email, personal_email, course, contact, enrollment_date });
 
     // Validate required fields
     if (!name || !email || !course || !contact || !enrollment_date) {
@@ -235,18 +255,33 @@ router.put('/:id', authenticateToken, async (req, res) => {
       return res.status(409).json({ error: 'Email already taken by another student' });
     }
 
+    // Check if personal email is already taken by another student (excluding current student)
+    if (personal_email) {
+      const { data: personalEmailCheck, error: personalEmailError } = await supabase
+        .from('students')
+        .select('id')
+        .eq('personal_email', personal_email)
+        .neq('id', id)
+        .maybeSingle();
+
+      if (personalEmailCheck) {
+        return res.status(409).json({ error: 'Personal email already taken by another student' });
+      }
+    }
+
     // Update student
     const { data: updatedStudent, error: updateError } = await supabase
       .from('students')
       .update({
         name: name.trim(),
         email: email.toLowerCase(),
+        personal_email: personal_email ? personal_email.toLowerCase() : null,
         course,
         contact,
         enrollment_date
       })
       .eq('id', id)
-      .select('id, name, email, course, contact, enrollment_date, created_at')
+      .select('id, name, email, personal_email, course, contact, enrollment_date, created_at')
       .single();
 
     if (updateError) {
@@ -321,7 +356,7 @@ router.get('/search/:query', authenticateToken, async (req, res) => {
     // Search students by name, email, or course
     const { data: students, error } = await supabase
       .from('students')
-      .select('id, name, email, course, contact, enrollment_date, created_at')
+      .select('id, name, email, personal_email, course, contact, enrollment_date, created_at')
       .eq('college_id', college.id)
       .or(`name.ilike.%${query}%,email.ilike.%${query}%,course.ilike.%${query}%`)
       .order('created_at', { ascending: false });
