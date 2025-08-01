@@ -9,7 +9,8 @@ import Dashboard from "./Dashboard";
 import Login from "./pages/login";
 import Signup from "./pages/Signup";
 import AdminDashboard from "./pages/AdminDashboard";
-import Landing from "./pages/Landing";
+import Landing from "./pages/LandingPage";
+import StartAtt from "./pages/StartAtt";
 function App() {
   return (
     <Router>
@@ -20,6 +21,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/landing" element={<Landing />} />
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/start" element={<StartAtt />} />
       </Routes>
     </Router>
   );
