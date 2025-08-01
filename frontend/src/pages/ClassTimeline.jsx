@@ -33,54 +33,79 @@ const ClassTimeline = () => {
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date().getDate());
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [classes, setClasses] = useState([
-    {
-      id: 1,
-      time: "09:23",
-      title: "Accounts and tax",
-      type: "Room 301",
-      startTime: "9:00 AM",
-      duration: 60,
-      color: "bg-yellow-100",
-      isActive: false
-    },
-    {
-      id: 2,
-      time: "10:20",
-      title: "Business plans",
-      type: "Room 302",
-      startTime: "10:00 AM",
-      duration: 60,
-      color: "bg-white",
-      isActive: false
-    },
-    {
-      id: 3,
-      time: "11:35",
-      title: "Risk analysis",
-      type: "Room 303",
-      startTime: "11:00 AM",
-      duration: 60,
-      color: "bg-white",
-      isActive: false
-    },
-    {
-      id: 4,
-      time: "12:00",
-      title: "Preparing budget forecasts",
-      type: "Room 304",
-      startTime: "12:00 PM",
-      duration: 60,
-      color: "bg-white",
-      isActive: false
+  const [classes, setClasses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+
+
+  // Fetch classes from backend
+  const fetchClasses = async () => {
+    try {
+      setLoading(true);
+      
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Authentication required. Please log in.');
+      }
+      
+      const response = await fetch('http://localhost:5000/api/class', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication required. Please log in.');
+        }
+        throw new Error('Failed to fetch classes');
+      }
+      const data = await response.json();
+      
+      // Transform the data to match our component's expected format
+      const transformedClasses = data.classes.map(cls => ({
+        id: cls.id,
+        title: cls.name,
+        type: cls.room_number,
+        startTime: cls.start_time,
+        endTime: cls.end_time,
+        duration: calculateDuration(cls.start_time, cls.end_time),
+        scheduleDay: cls.schedule_day,
+        subject: cls.subject_name || 'Mathematics',
+        isActive: false
+      }));
+      
+      setClasses(transformedClasses);
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching classes:', err);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
+  // Calculate duration in minutes
+  const calculateDuration = (startTime, endTime) => {
+    const start = new Date(`2000-01-01T${startTime}`);
+    const end = new Date(`2000-01-01T${endTime}`);
+    return Math.round((end - start) / (1000 * 60));
+  };
 
+  // Convert 24-hour time to 12-hour format
+  const formatTime = (time24) => {
+    const [hours, minutes] = time24.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
 
   const timeSlots = [
     "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", 
-    "12:00 PM", 
+    "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM", "9:00 PM"
   ];
 
   const getDaysInMonth = (date) => {
@@ -139,12 +164,18 @@ const ClassTimeline = () => {
 
   // Function to update active class based on current time
   const updateActiveClass = () => {
-    const updatedClasses = classes.map(cls => ({
-      ...cls,
-      isActive: isClassCurrentlyActive(cls)
-    }));
-    setClasses(updatedClasses);
+    setClasses(prevClasses => 
+      prevClasses.map(cls => ({
+        ...cls,
+        isActive: isClassCurrentlyActive(cls)
+      }))
+    );
   };
+
+  // Fetch classes on component mount
+  useEffect(() => {
+    fetchClasses();
+  }, []);
 
   // Update active class on component mount and every minute
   useEffect(() => {
@@ -156,7 +187,7 @@ const ClassTimeline = () => {
     
     // Cleanup interval on component unmount
     return () => clearInterval(interval);
-  }, []);
+  }, []); // Remove classes dependency to prevent infinite loop
 
   return (
     <div className="min-h-screen bg-white">
@@ -277,39 +308,67 @@ const ClassTimeline = () => {
               {/* Timeline line */}
               <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
               
-                                                           {/* Classes */}
-                 {classes.map((cls) => (
-                   <div
-                     key={cls.id}
-                                           className={`absolute left-8 right-4 rounded-lg border-l-4 p-3 shadow-sm transition-all duration-200 cursor-pointer hover:shadow-md ${
-                        cls.isActive 
-                          ? 'bg-[rgba(251,191,36,0.2)] border-l-4' 
-                          : 'bg-white border-l-4'
-                      }`}
-                      style={{
-                        top: `${getClassPosition(cls.startTime)}px`,
-                        height: `${cls.duration + 20}px`,
-                        borderLeftColor: cls.isActive ? '#FBBF24' : '#9886FE'
-                      }}
-                      onClick={() => navigate('/attendance-session')}
-                   >
-                                       <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <span className="text-xs text-gray-500">{cls.time}</span>
-                          <span className="text-xs text-gray-500 flex items-center">
-                            <MapPin className="h-3 w-3 mr-1" />
-                            {cls.type}
-                          </span>
-                        </div>
-                        <p className="text-sm font-medium text-gray-900">{cls.title}</p>
-                      </div>
-                      <button className="text-gray-400 hover:text-gray-600 ml-2">
-                        <span className="text-lg">⋯</span>
-                      </button>
-                    </div>
-                 </div>
-               ))}
+                                                                                                                       {/* Classes */}
+                 {loading ? (
+                   <div className="flex items-center justify-center h-64">
+                     <div className="text-gray-500">Loading classes...</div>
+                   </div>
+                 ) : error ? (
+                   <div className="flex items-center justify-center h-64">
+                     <div className="text-red-500">Error: {error}</div>
+                   </div>
+                 ) : classes.length === 0 ? (
+                   <div className="flex items-center justify-center h-64">
+                     <div className="text-gray-500">No classes found</div>
+                   </div>
+                 ) : (
+                   classes.map((cls) => (
+                     <div
+                       key={cls.id}
+                       className={`absolute left-8 right-4 rounded-lg border-l-4 p-3 shadow-sm transition-all duration-200 cursor-pointer hover:shadow-md ${
+                         cls.isActive 
+                           ? 'bg-[rgba(251,191,36,0.2)] border-l-4' 
+                           : 'bg-white border-l-4'
+                       }`}
+                       style={{
+                         top: `${getClassPosition(formatTime(cls.startTime))}px`,
+                         height: `${cls.duration + 20}px`,
+                         borderLeftColor: cls.isActive ? '#FBBF24' : '#9886FE'
+                       }}
+                                               onClick={() => navigate('/attendance-session', { 
+                          state: { 
+                            classDetails: {
+                              id: cls.id,
+                              name: cls.title,
+                              startTime: cls.startTime,
+                              endTime: cls.endTime,
+                              roomNumber: cls.type,
+                              subject: cls.subject,
+                              scheduleDay: cls.scheduleDay
+                            }
+                          }
+                        })}
+                     >
+                       <div className="flex items-center justify-between">
+                         <div className="flex-1">
+                           <div className="flex items-center space-x-2 mb-1">
+                             <span className="text-xs text-gray-500">
+                               {formatTime(cls.startTime)} - {formatTime(cls.endTime)}
+                             </span>
+                             <span className="text-xs text-gray-500 flex items-center">
+                               <MapPin className="h-3 w-3 mr-1" />
+                               {cls.type}
+                             </span>
+                           </div>
+                           <p className="text-sm font-medium text-gray-900">{cls.title}</p>
+                         </div>
+                         <button className="text-gray-400 hover:text-gray-600 ml-2">
+                           <span className="text-lg">⋯</span>
+                         </button>
+                       </div>
+                     </div>
+                   ))
+                 )}
             </div>
           </div>
         </div>
