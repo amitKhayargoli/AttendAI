@@ -1,9 +1,304 @@
-import React from 'react'
+import React, { useState } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { 
+  BarChart3, 
+  Calendar, 
+  Settings, 
+  Users, 
+  FileText, 
+  Clock, 
+  Award,
+  ChevronLeft,
+  ChevronRight,
+  MoreHorizontal
+} from 'lucide-react';
 
 const StudentDashboard = () => {
-  return (
-    <div>StudentDashboard</div>
-  )
-}
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date().getDate());
 
-export default StudentDashboard
+  // Mock data for the dashboard
+  const testScores = [
+    { date: 'Apr 10', score: 65 },
+    { date: 'Apr 11', score: 75 },
+    { date: 'Apr 12', score: 80 },
+    { date: 'Apr 13', score: 85 },
+    { date: 'Apr 14', score: 70 },
+    { date: 'Apr 15', score: 90 },
+    { date: 'Apr 16', score: 88 }
+  ];
+
+  const dailySchedule = [
+    { time: '8:00 AM', subject: 'Science', type: 'class' },
+    { time: '9:00 AM', subject: 'English', type: 'class' },
+    { time: '10:00 AM', subject: 'Break', type: 'break' },
+    { time: '10:15 AM', subject: 'Math', type: 'class' },
+  ];
+
+  const getDaysInMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDayOfMonth = new Date(year, month, 1).getDay();
+    
+    const days = [];
+    for (let i = 0; i < firstDayOfMonth; i++) {
+      days.push(null);
+    }
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(i);
+    }
+    return days;
+  };
+
+  const days = getDaysInMonth(currentMonth);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-white to-yellow-50">
+      <div className="flex">
+        {/* Left Sidebar */}
+        <div className="w-64 bg-white border-r border-gray-200 p-6 min-h-screen">
+          {/* Logo */}
+          <div className="flex items-center space-x-3 mb-8">
+
+            <h1 className="text-xl font-medium text-gray-900">AttendAI</h1>
+          </div>
+
+          {/* Navigation */}
+          <nav className="space-y-4">
+            <a href="#" className="flex items-center space-x-3 px-4 py-3 bg-yellow-100 text-gray-900 rounded-lg">
+              <BarChart3 className="h-5 w-5" />
+              <span className="font-medium">Dashboard</span>
+            </a>
+            <a href="#" className="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-gray-900">
+              <Users className="h-5 w-5" />
+              <span>Attendance</span>
+            </a>
+            <a href="#" className="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-gray-900">
+              <Settings className="h-5 w-5" />
+              <span>Settings</span>
+            </a>
+          </nav>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 p-8">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-3xl font-medium text-gray-900">Welcome Back, Amit 👋</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="text-right">
+                <p className="font-medium text-gray-900">Amit K</p>
+                <p className="text-sm text-gray-500">Admin</p>
+              </div>
+              <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
+            </div>
+          </div>
+
+          {/* Dashboard Grid */}
+          <div className="grid grid-cols-12 gap-6">
+
+
+
+            {/* Summary Statistics */}
+            <div className="col-span-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <Users className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-medium text-gray-900">80%</p>
+                        <p className="text-sm text-gray-500">Attendance</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <FileText className="h-5 w-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-medium text-gray-900">258+</p>
+                        <p className="text-sm text-gray-500">Task Completed</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                        <Clock className="h-5 w-5 text-yellow-600" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-medium text-gray-900">64%</p>
+                        <p className="text-sm text-gray-500">Task in Progress</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
+                        <Award className="h-5 w-5 text-pink-600" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-medium text-gray-900">245</p>
+                        <p className="text-sm text-gray-500">Reward Points</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            {/* Attendance Donut Chart */}
+            <div className="col-span-3">
+              <Card className="h-80">
+                <CardContent className="p-0">
+                  <div className="flex items-center justify-between mb-0">
+                    <h3 className="text-lg font-normal text-gray-900">Attendance</h3>
+                    <MoreHorizontal className="h-5 w-5 text-gray-400" />
+                  </div>
+                  
+                  {/* Donut Chart */}
+                  <div className="flex justify-center">
+                    <div className="">
+   
+
+                      <div className="w-42 h-42 p-5 py-8 mb-2 bg-white border-36 border-[#9886fe] border-t-[#FBBF24] rounded-full">
+
+
+                      <div className="inset-0 flex items-center justify-center">
+                        <span className="text-2xl font-medium text-gray-900">80%</span>
+                      </div>
+                    </div>
+                      </div>
+                  </div>
+                  
+                  {/* Legend */}
+                  <div className="flex items-center justify-center space-x-4 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-[#9886fe] rounded-full"></div>
+                      <span className="text-sm text-gray-600">Present</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                      <span className="text-sm text-gray-600">Absent</span>
+                    </div>
+                  </div>
+                  
+                  {/* Dropdowns */}
+                  <div className="flex items-center gap-2">
+                    <select className="bg-[#F5F4F9] rounded-md w-full text-sm border border-gray-300 px-3 py-2">
+                      <option>July 2025</option>
+                    </select>
+                    <select className="bg-[#F5F4F9] w-full text-sm border border-gray-300 rounded-md px-3 py-2">
+                      <option>Semester 4</option>
+                    </select>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+
+            {/* Calendar Widget */}
+            {/* <div className="col-span-4">
+              <Card className="h-80">
+                <CardContent className="p-0">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-normal text-gray-900">Calendar</h3>
+                  </div>
+                  <p className="text-sm text-gray-500 mb-4">November 2024</p>
+                  
+       
+                  <div className="grid grid-cols-7 gap-1">
+                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
+                      <div key={index} className="text-center text-xs font-medium text-gray-500 py-2">
+                        {day}
+                      </div>
+                    ))}
+                    {days.map((day, index) => (
+                      <div key={index} className="text-center py-2">
+                        {day && (
+                          <button
+                            onClick={() => setSelectedDate(day)}
+                            className={`w-8 h-8 rounded-full text-sm font-medium transition-colors ${
+                              day === selectedDate
+                                ? 'bg-purple-500 text-white'
+                                : day === 1 || day === 8 || day === 9 || day === 10 || day === 16 || day === 29 || day === 30
+                                ? 'bg-green-100 text-green-700'
+                                : day === 7
+                                ? 'bg-red-100 text-red-700'
+                                : day === 4 || day === 5 || day === 20 || day === 21 || day === 28
+                                ? 'bg-yellow-100 text-yellow-700'
+                                : 'text-gray-900 hover:bg-gray-100'
+                            }`}
+                          >
+                            {day}
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div> */}
+
+
+
+            {/* Daily Schedule */}
+            <div className="col-span-4">
+              <Card className="h-80">
+                <CardContent className="p-0">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-normal text-gray-900">Monday</h3>
+                    <div className="flex space-x-2">
+                      <Button variant="outline" size="sm">
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {dailySchedule.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between py-2">
+                        <span className="text-sm text-gray-600">{item.time}</span>
+                        <span className={`text-sm px-3 py-1 rounded-full ${
+                          item.type === 'break' 
+                            ? 'bg-purple-100 text-purple-700'
+                            : item.type === 'lunch'
+                            ? 'bg-yellow-100 text-yellow-700'
+                            : 'text-gray-900'
+                        }`}>
+                          {item.subject}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default StudentDashboard;
