@@ -11,6 +11,7 @@ import Signup from "./pages/Signup";
 import AdminDashboard from "./pages/AdminDashboard";
 import Landing from "./pages/LandingPage";
 import StartAtt from "./pages/StartAtt";
+import AttendancePage from "./pages/AttendencePage";
 function App() {
   return (
     <Router>
@@ -22,6 +23,7 @@ function App() {
         <Route path="/landing" element={<Landing />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/start" element={<StartAtt />} />
+        <Route path="/attendance" element={<AttendancePage />} />
       </Routes>
     </Router>
   );
