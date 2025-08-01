@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import TeacherNavbar from "@/components/TeacherNavbar";
@@ -9,21 +10,41 @@ import {
   Calendar,
   User,
   CheckCircle,
-  XCircle
+  XCircle,
+  ArrowLeft
 } from 'lucide-react';
 
 const AttendanceSession = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [sessionActive, setSessionActive] = useState(false);
   const [sessionTime, setSessionTime] = useState(0);
   const [presentCount, setPresentCount] = useState(0);
   const [absentCount, setAbsentCount] = useState(0);
+
+  // Get class details from navigation state
+  const classDetails = location.state?.classDetails || {
+    name: 'Advanced Mathematics 101',
+    startTime: '10:30 AM',
+    endTime: '12:00 PM',
+    roomNumber: 'Room 305',
+    subject: 'Mathematics'
+  };
 
   // Timer effect for active session
   useEffect(() => {
     let interval;
     if (sessionActive) {
       interval = setInterval(() => {
-        setSessionTime(prev => prev + 1);
+        setSessionTime(prev => {
+          const newTime = prev + 1;
+          // Auto-end session after 5 minutes (300 seconds)
+          if (newTime >= 300) {
+            setSessionActive(false);
+            return 0;
+          }
+          return newTime;
+        });
       }, 1000);
     }
     return () => clearInterval(interval);
@@ -59,29 +80,41 @@ const AttendanceSession = () => {
             <div className="flex items-start justify-between mb-4">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-3">
-                  Advanced Mathematics 101
+                  {classDetails.name}
                 </h2>
                 <div className="flex items-center space-x-6 text-gray-600">
                   <div className="flex items-center space-x-2">
                     <Clock className="h-4 w-4" />
-                    <span>10:30 AM - 12:00 PM</span>
+                    <span>{classDetails.startTime} - {classDetails.endTime}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <MapPin className="h-4 w-4" />
-                    <span>Room 305</span>
+                    <span>{classDetails.roomNumber}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <BookOpen className="h-4 w-4" />
-                    <span>Mathematics</span>
+                    <span>{classDetails.subject}</span>
                   </div>
                 </div>
               </div>
               <div className="text-right">
                 <div className="flex items-center space-x-2 text-gray-600 mb-2">
                   <Calendar className="h-4 w-4" />
-                  <span>October 15, 2023</span>
+                  <span>{new Date().toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}</span>
                 </div>
-
+                <Button 
+                  onClick={() => navigate('/class-timeline')}
+                  variant="outline" 
+                  className="flex items-center space-x-2 text-sm"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  <span>Back to Calendar</span>
+                </Button>
               </div>
             </div>
             {!sessionActive && (
@@ -111,10 +144,10 @@ const AttendanceSession = () => {
               </div>
               
               <div className="flex items-center space-x-4 mb-6">
-                <div className="text-gray-600">
-                  Session active: {formatTime(sessionTime)}
-                </div>
-              </div>
+                 <div className="text-gray-600">
+                 Time remaining: {formatTime(300 - sessionTime)}
+                 </div>
+               </div>
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">

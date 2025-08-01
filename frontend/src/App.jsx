@@ -12,6 +12,7 @@ import Classes from "./pages/Classes";
 import ClassTimeline from "./pages/ClassTimeline";
 import AttendanceSession from "./pages/AttendanceSession";
 import { useState } from "react";
+import StudentDashboard from "./pages/StudentDashboard";
 
 function App() {
   const [userRole, setUserRole] = useState("Student");
@@ -25,6 +26,7 @@ function App() {
         <Route path="/reset-password" element={<Resetpassword />} />
         <Route path="/dashboard" element={<Dashboard/>} />
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/student-dashboard" element={<StudentDashboard />} />
         <Route path="/students" element={<Students />} />
         <Route path="/teachers" element={<Teachers />} />
         <Route path="/subjects" element={<Subjects />} />
