@@ -5,12 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-
+import AddFaceModal from "./AddFaceModal";
 
 export default function Login() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showFaceModal, setShowFaceModal] = useState(false);
+  const [userData, setUserData] = useState(null);
 
   const navigate = useNavigate();
 
@@ -45,26 +47,50 @@ export default function Login() {
       } else {
         setSuccess('Login successful');
         localStorage.setItem('token', data.token);
+        setUserData(data.user);
 
         console.log(data);
 
-        if (data.user.userType === 'admin') {
+        // Check if user is a student and if they need face registration
+        if (data.user.userType === 'student') {
+          // Check if face is already registered (you can add this logic based on your backend)
+          const hasFaceRegistered = localStorage.getItem('faceRegistered');
+          
+          if (!hasFaceRegistered) {
+            // Show face registration modal for first-time students
+            setShowFaceModal(true);
+          } else {
+            // Navigate to student dashboard if face is already registered
+            navigate('/student-dashboard');
+          }
+        } else if (data.user.userType === 'admin') {
           navigate('/admin');
-        } else if (data.user.userType === 'student') {
-          navigate('/student');
-        }
-        else if (data.user.userType === 'faculty') {
-          navigate('/faculty');
+        } else if (data.user.userType === 'teacher') {
+          navigate('/class-timeline');
         } else {
           navigate('/');
         }
-
       }
     } catch (error) {
       setError(error.message);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleFaceAdded = () => {
+    // Mark face as registered
+    localStorage.setItem('faceRegistered', 'true');
+    setShowFaceModal(false);
+    
+    // Navigate to student dashboard after face registration
+    navigate('/student-dashboard');
+  };
+
+  const handleCloseFaceModal = () => {
+    setShowFaceModal(false);
+    // Navigate to student dashboard even if they skip face registration
+    navigate('/student-dashboard');
   };
 
   return (  
@@ -123,6 +149,13 @@ export default function Login() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Face Registration Modal */}
+      <AddFaceModal
+        isOpen={showFaceModal}
+        onClose={handleCloseFaceModal}
+        onFaceAdded={handleFaceAdded}
+      />
     </div>
   );
 }
