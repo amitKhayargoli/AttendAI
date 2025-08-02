@@ -6,12 +6,13 @@ const Students = () => {
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(false)
 
+  // Fix the formData state to match the JSX field names
   const [formData, setFormData] = useState({
     fullName: '',
-    course: '',
-    contactNumber: '',
-    enrollmentDate: '',
-    personalEmail: ''
+    personalEmail: '', // Changed from personal_email
+    course_id: '',
+    contactNumber: '', // Changed from contact
+    enrollmentDate: '' // Changed from enrollment_date
   })
 
   const [suggestedEmail, setSuggestedEmail] = useState('sarah.johnson@attendai.edu.np')
@@ -22,8 +23,9 @@ const Students = () => {
   const [generatedPassword, setGeneratedPassword] = useState('')
   const [editingStudent, setEditingStudent] = useState(null)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [courses, setCourses] = useState([])
 
-  const courses = ['Computer Science', 'Data Science', 'Business Analytics', 'Information Technology']
+  // const courses = ['Computer Science', 'Data Science', 'Business Analytics', 'Information Technology']
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -69,8 +71,10 @@ const Students = () => {
       }
       const email = `${firstName}.${lastName}@${domain}.edu.np`
       setSuggestedEmail(email)
+      return email
     } else {
       setSuggestedEmail('')
+      return ''
     }
   }
 
@@ -90,29 +94,16 @@ const Students = () => {
       newErrors.fullName = 'Full name must be at least 2 characters'
     }
     
-    if (!formData.course) {
+    if (!formData.course_id) {
       newErrors.course = 'Please select a course'
     }
     
-    if (!formData.contactNumber.trim()) {
-      newErrors.contactNumber = 'Contact number is required'
-    } else if (!/^[\+]?[1-9][\d]{0,15}$/.test(formData.contactNumber.replace(/\s/g, ''))) {
-      newErrors.contactNumber = 'Please enter a valid contact number'
+    if (!formData.contactNumber.trim()) { // Changed from contact
+      newErrors.contactNumber = 'Contact number is required' // Changed from contact
     }
     
-    if (!formData.enrollmentDate) {
-      newErrors.enrollmentDate = 'Enrollment date is required'
-    } else {
-      const selectedDate = new Date(formData.enrollmentDate)
-      const today = new Date()
-      if (selectedDate > today) {
-        newErrors.enrollmentDate = 'Enrollment date cannot be in the future'
-      }
-    }
-    
-    // Check if email can be generated (requires full name)
-    if (!formData.fullName.trim()) {
-      newErrors.suggestedEmail = 'Please enter the student details to generate email'
+    if (!formData.enrollmentDate) { // Changed from enrollment_date
+      newErrors.enrollmentDate = 'Enrollment date is required' // Changed from enrollment_date
     }
     
     setErrors(newErrors)
@@ -122,23 +113,25 @@ const Students = () => {
   const handleRegisterStudent = async () => {
     if (validateForm()) {
       try {
-        const password = generateRandomPassword()
-        setGeneratedPassword(password)
+        // Generate email from fullName
+        const generatedEmail = generateEmail(formData.fullName)
+        
+        // Generate a random password for the student
+        const generatedPassword = generateRandomPassword()
         
         const studentData = {
           name: formData.fullName.trim(),
-          email: suggestedEmail,
+          email: generatedEmail, // Use generated email
           personal_email: formData.personalEmail.trim() || null,
-          password: password,
-          course: formData.course,
-          contact: formData.contactNumber,
+          password: generatedPassword,
+          course_id: formData.course_id,
+          contact: formData.contactNumber.trim(),
           enrollment_date: formData.enrollmentDate
         }
 
+        console.log('Sending student data:', studentData)
+
         const result = await createStudent(studentData)
-        
-        // Store credentials from API response
-        setApiCredentials(result.credentials)
         
         // Refresh students list
         await fetchStudents()
@@ -146,25 +139,16 @@ const Students = () => {
         // Reset form
         setFormData({
           fullName: '',
-          course: '',
+          personalEmail: '',
+          course_id: '',
           contactNumber: '',
-          enrollmentDate: '',
-          personalEmail: ''
+          enrollmentDate: ''
         })
         
         setErrors({})
-        setShowSuccessMessage(true)
         showToast('Student registered successfully!', 'success')
-        
-        // Hide success message after 3 seconds
-        setTimeout(() => {
-          setShowSuccessMessage(false)
-          setGeneratedPassword('')
-          setApiCredentials(null)
-        }, 3000)
       } catch (error) {
         showToast(error.message || 'Failed to register student', 'error')
-        setGeneratedPassword('')
       }
     } else {
       showToast('Please fill in all required fields correctly', 'error')
@@ -355,17 +339,43 @@ const Students = () => {
     setErrors({})
   }
 
+  const fetchCourses = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE_URL}/student/courses`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch courses')
+      }
+
+      const data = await response.json()
+      setCourses(data.courses || [])
+    } catch (error) {
+      console.error('Error fetching courses:', error)
+      showToast('Failed to fetch courses', 'error')
+    }
+  }
+
   // Load students on component mount
   React.useEffect(() => {
     fetchStudents()
+    fetchCourses() // This will now work
   }, [])
 
+  // Update the filteredStudents to use the course field
   const filteredStudents = students.filter(student =>
     student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.course.toLowerCase().includes(searchTerm.toLowerCase())
+    (student.course && student.course.toLowerCase().includes(searchTerm.toLowerCase()))
   )
 
+  // Update the filteredByCourse to use the course field
   const filteredByCourse = selectedCourse === 'All Courses' 
     ? filteredStudents 
     : filteredStudents.filter(student => student.course === selectedCourse)
@@ -409,7 +419,6 @@ const Students = () => {
                       onChange={(e) => {
                         const newValue = e.target.value
                         handleInputChange('fullName', newValue)
-                        generateEmail(newValue)
                         // Clear error when user starts typing
                         if (errors.fullName) {
                           setErrors(prev => ({ ...prev, fullName: '' }))
@@ -431,9 +440,9 @@ const Students = () => {
                   <div className="relative">
                     <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                     <select
-                      value={formData.course}
+                      value={formData.course_id}
                       onChange={(e) => {
-                        handleInputChange('course', e.target.value)
+                        handleInputChange('course_id', e.target.value)
                         // Clear error when user selects a course
                         if (errors.course) {
                           setErrors(prev => ({ ...prev, course: '' }))
@@ -445,7 +454,9 @@ const Students = () => {
                     >
                       <option value="">Select course</option>
                       {courses.map(course => (
-                        <option key={course} value={course}>{course}</option>
+                        <option key={course.id} value={course.id}>
+                          {course.name} ({course.code})
+                        </option>
                       ))}
                     </select>
                     <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -599,7 +610,7 @@ const Students = () => {
                     >
                       <option value="All Courses">All Courses</option>
                       {courses.map(course => (
-                        <option key={course} value={course}>{course}</option>
+                        <option key={course.id} value={course.name}>{course.name}</option>
                       ))}
                     </select>
                     <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -641,8 +652,15 @@ const Students = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {student.personal_email || '-'}
                         </td>
+                        {/* Course column in the table */}
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {student.course}
+                          {student.course ? (
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              {student.course}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">No course</span>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {student.contact}
@@ -771,7 +789,7 @@ const Students = () => {
                 >
                   <option value="">Select course</option>
                   {courses.map(course => (
-                    <option key={course} value={course}>{course}</option>
+                    <option key={course.id} value={course.name}>{course.name}</option>
                   ))}
                 </select>
                 {errors.course && (
