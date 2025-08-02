@@ -1,17 +1,19 @@
 import React, { useState } from 'react'
 import AdminSidebar from '../AdminSidebar'
-import { Search, BookOpen, Hash, TrendingUp, User, Filter, Edit, Trash2, ChevronDown, CheckCircle, AlertCircle, X } from 'lucide-react'
+import { Search, BookOpen, Hash, TrendingUp, User, Filter, Edit, Trash2, ChevronDown, CheckCircle, AlertCircle, X, GraduationCap } from 'lucide-react'
 
 const Subjects = () => {
   const [subjects, setSubjects] = useState([])
   const [teachers, setTeachers] = useState([])
+  const [courses, setCourses] = useState([])
   const [loading, setLoading] = useState(false)
 
   const [formData, setFormData] = useState({
     name: '',
     code: '',
     level: '',
-    teacher_id: ''
+    teacher_id: '',
+    course_id: ''
   })
 
   const [searchTerm, setSearchTerm] = useState('')
@@ -67,8 +69,11 @@ const Subjects = () => {
           name: formData.name.trim(),
           code: formData.code.trim().toUpperCase(),
           level: formData.level,
-          teacher_id: formData.teacher_id || null
+          teacher_id: formData.teacher_id || null,
+          course_id: formData.course_id || null
         }
+
+        console.log('Sending subject data:', subjectData); // Add this for debugging
 
         const result = await createSubject(subjectData)
         
@@ -80,7 +85,8 @@ const Subjects = () => {
           name: '',
           code: '',
           level: '',
-          teacher_id: ''
+          teacher_id: '',
+          course_id: ''
         })
         
         setErrors({})
@@ -260,6 +266,28 @@ const Subjects = () => {
     }
   }
 
+  const fetchCourses = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE_URL}/courses`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch courses')
+      }
+
+      const data = await response.json()
+      setCourses(data.courses || [])
+    } catch (error) {
+      console.error('Error fetching courses:', error)
+    }
+  }
+
   const createSubject = async (subjectData) => {
     try {
       setLoading(true)
@@ -288,17 +316,19 @@ const Subjects = () => {
     }
   }
 
-  // Load subjects and teachers on component mount
+  // Load subjects, teachers, and courses on component mount
   React.useEffect(() => {
     fetchSubjects()
     fetchTeachers()
+    fetchCourses()
   }, [])
 
   const filteredSubjects = subjects.filter(subject =>
     subject.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     subject.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
     subject.level.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    subject.teacher_name.toLowerCase().includes(searchTerm.toLowerCase())
+    subject.teacher_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (subject.course_name && subject.course_name.toLowerCase().includes(searchTerm.toLowerCase()))
   )
 
   const filteredByLevel = selectedLevel === 'All Levels' 
@@ -434,6 +464,25 @@ const Subjects = () => {
                   </div>
                 </div>
 
+                {/* Assign Course */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Assign Course (Optional)</label>
+                  <div className="relative">
+                    <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                    <select
+                      value={formData.course_id}
+                      onChange={(e) => handleInputChange('course_id', e.target.value)}
+                      className="pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9886FE] focus:border-transparent w-full appearance-none"
+                    >
+                      <option value="">Select course (optional)</option>
+                      {courses.map(course => (
+                        <option key={course.id} value={course.id}>{course.name} ({course.code})</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  </div>
+                </div>
+
                 {/* Register Subject Button */}
                 <button
                   onClick={handleRegisterSubject}
@@ -492,6 +541,7 @@ const Subjects = () => {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Level</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teacher</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                       </tr>
@@ -515,6 +565,15 @@ const Subjects = () => {
                                {subject.level}
                              </span>
                            </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {subject.course_name ? (
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                {subject.course_name}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">No course</span>
+                            )}
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {subject.teacher_name}
                           </td>
