@@ -1,4 +1,4 @@
-import { Settings, X, Users, BookOpen, FileText, BarChart3, Calendar } from "lucide-react";
+import { Settings, X, Users, BookOpen, FileText, BarChart3, Calendar, GraduationCap } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -60,6 +60,7 @@ const AdminSidebar = () => {
       case "/students": return "Students";
       case "/teachers": return "Teachers";
       case "/subjects": return "Subjects";
+      case "/courses": return "Courses";
       case "/classes": return "Classes";
       case "/attendance": return "Attendance";
       case "/settings": return "Settings";
@@ -93,6 +94,9 @@ const AdminSidebar = () => {
         break;
       case "Subjects":
         navigate("/subjects");
+        break;
+      case "Courses":
+        navigate("/courses");
         break;
       case "Classes":
         navigate("/classes");
@@ -158,12 +162,21 @@ const AdminSidebar = () => {
             onClick={() => handleTabClick("Teachers")}
           />
           <SidebarItem
+            icon={<GraduationCap />}
+            label="Courses"
+            collapsed={sidebarCollapsed}
+            isActive={activeTab === "Courses"}
+            onClick={() => handleTabClick("Courses")}
+          />
+
+          <SidebarItem
             icon={<BookOpen />}
             label="Subjects"
             collapsed={sidebarCollapsed}
             isActive={activeTab === "Subjects"}
             onClick={() => handleTabClick("Subjects")}
           />
+
           <SidebarItem
             icon={<Calendar />}
             label="Classes"
