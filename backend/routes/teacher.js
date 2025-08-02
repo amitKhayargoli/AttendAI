@@ -22,6 +22,49 @@ const authenticateToken = async (req, res, next) => {
   }
 };
 
+// Get teacher's assigned subjects - MOVED TO TOP
+router.get('/subjects', authenticateToken, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('teachers_subjects')
+      .select(`
+        subject:subjects(
+          id,
+          name,
+          code,
+          level
+        )
+      `)
+      .eq('teacher_id', req.user.userId);
+
+    if (error) throw error;
+
+    const subjects = data.map(item => item.subject);
+    res.json({ subjects });
+  } catch (error) {
+    console.error('Error fetching teacher subjects:', error);
+    res.status(500).json({ error: 'Failed to fetch teacher subjects' });
+  }
+});
+
+// Get teacher profile - ADD THIS ROUTE
+router.get('/profile', authenticateToken, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('teachers')
+      .select('id, name, email, contact, college_id')
+      .eq('id', req.user.userId)
+      .single();
+
+    if (error) throw error;
+
+    res.json({ teacher: data });
+  } catch (error) {
+    console.error('Error fetching teacher profile:', error);
+    res.status(500).json({ error: 'Failed to fetch teacher profile' });
+  }
+});
+
 // Create new teacher
 router.post('/create', authenticateToken, async (req, res) => {
   try {
