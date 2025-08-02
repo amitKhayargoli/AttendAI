@@ -8,6 +8,9 @@ DROP TABLE IF EXISTS students CASCADE;
 DROP TABLE IF EXISTS admins CASCADE;
 DROP TABLE IF EXISTS colleges CASCADE;
 DROP TABLE IF EXISTS otp_requests CASCADE;
+DROP TABLE IF EXISTS courses CASCADE;
+DROP TABLE IF EXISTS teacher_courses CASCADE;
+DROP TABLE IF EXISTS student_courses CASCADE;
 
 -- Drop any existing indexes
 DROP INDEX IF EXISTS idx_students_college_id;
@@ -23,6 +26,12 @@ DROP INDEX IF EXISTS idx_class_attendance_student_id;
 DROP INDEX IF EXISTS idx_class_attendance_date;
 DROP INDEX IF EXISTS idx_otp_requests_personal_email;
 DROP INDEX IF EXISTS idx_otp_requests_expires_at;
+DROP INDEX IF EXISTS idx_subjects_course_id;
+DROP INDEX IF EXISTS idx_teacher_courses_teacher_id;
+DROP INDEX IF EXISTS idx_teacher_courses_course_id;
+DROP INDEX IF EXISTS idx_student_courses_student_id;
+DROP INDEX IF EXISTS idx_student_courses_course_id;
+DROP INDEX IF EXISTS idx_courses_college_id;
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -45,14 +54,24 @@ CREATE TABLE admins (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create students table
+-- Create courses table (moved before students and teachers)
+CREATE TABLE courses (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name VARCHAR(255) NOT NULL,
+  code VARCHAR(50) UNIQUE NOT NULL,
+  description TEXT,
+  duration_years INTEGER DEFAULT 4,
+  college_id UUID REFERENCES colleges(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create students table (updated to reference course_id instead of course string)
 CREATE TABLE students (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name VARCHAR(255) NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   personal_email VARCHAR(255) UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
-  course VARCHAR(255) NOT NULL,
   contact VARCHAR(20),
   enrollment_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   face_descriptor FLOAT[],
@@ -73,7 +92,7 @@ CREATE TABLE teachers (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create subjects table
+-- Create subjects table (updated to properly reference courses)
 CREATE TABLE subjects (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name VARCHAR(255) NOT NULL,
@@ -81,6 +100,7 @@ CREATE TABLE subjects (
   level VARCHAR(50) NOT NULL,
   teacher_id UUID REFERENCES teachers(id) ON DELETE SET NULL,
   college_id UUID REFERENCES colleges(id) ON DELETE CASCADE,
+  course_id UUID REFERENCES courses(id) ON DELETE CASCADE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -127,10 +147,44 @@ CREATE TABLE otp_requests (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Create teacher_courses junction table (many-to-many relationship)
+CREATE TABLE teacher_courses (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  teacher_id UUID REFERENCES teachers(id) ON DELETE CASCADE,
+  course_id UUID REFERENCES courses(id) ON DELETE CASCADE,
+  assigned_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(teacher_id, course_id)
+);
+
+-- Create student_courses junction table (many-to-many relationship)
+CREATE TABLE student_courses (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE,
+  course_id UUID REFERENCES courses(id) ON DELETE CASCADE,
+  enrollment_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(student_id, course_id)
+);
+
+-- Enable RLS for all tables
+ALTER TABLE colleges ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
+ALTER TABLE students ENABLE ROW LEVEL SECURITY;
+ALTER TABLE teachers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE courses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE subjects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE classes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE class_enrollments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE class_attendance ENABLE ROW LEVEL SECURITY;
+ALTER TABLE otp_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE teacher_courses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE student_courses ENABLE ROW LEVEL SECURITY;
+
 -- Create indexes for better performance
 CREATE INDEX idx_students_college_id ON students(college_id);
 CREATE INDEX idx_teachers_college_id ON teachers(college_id);
+CREATE INDEX idx_courses_college_id ON courses(college_id);
 CREATE INDEX idx_subjects_college_id ON subjects(college_id);
+CREATE INDEX idx_subjects_course_id ON subjects(course_id);
 CREATE INDEX idx_classes_subject_id ON classes(subject_id);
 CREATE INDEX idx_classes_teacher_id ON classes(teacher_id);
 CREATE INDEX idx_classes_college_id ON classes(college_id);
@@ -141,14 +195,7 @@ CREATE INDEX idx_class_attendance_student_id ON class_attendance(student_id);
 CREATE INDEX idx_class_attendance_date ON class_attendance(date);
 CREATE INDEX idx_otp_requests_personal_email ON otp_requests(personal_email);
 CREATE INDEX idx_otp_requests_expires_at ON otp_requests(expires_at);
-
--- Enable Row Level Security (RLS)
-ALTER TABLE colleges ENABLE ROW LEVEL SECURITY;
-ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
-ALTER TABLE students ENABLE ROW LEVEL SECURITY;
-ALTER TABLE teachers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE subjects ENABLE ROW LEVEL SECURITY;
-ALTER TABLE classes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE class_enrollments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE class_attendance ENABLE ROW LEVEL SECURITY;
-ALTER TABLE otp_requests ENABLE ROW LEVEL SECURITY; 
+CREATE INDEX idx_teacher_courses_teacher_id ON teacher_courses(teacher_id);
+CREATE INDEX idx_teacher_courses_course_id ON teacher_courses(course_id);
+CREATE INDEX idx_student_courses_student_id ON student_courses(student_id);
+CREATE INDEX idx_student_courses_course_id ON student_courses(course_id); 
