@@ -11,14 +11,19 @@ const authenticateToken = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
     
+    console.log('Auth middleware - headers:', req.headers.authorization ? 'Present' : 'Missing');
+    console.log('Auth middleware - token:', token ? 'Present' : 'Missing');
+    
     if (!token) {
       return res.status(401).json({ error: 'Access token required' });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('Auth middleware - decoded user:', decoded);
     req.user = decoded;
     next();
   } catch (error) {
+    console.error('Auth middleware - token verification error:', error);
     return res.status(403).json({ error: 'Invalid token' });
   }
 };
@@ -26,13 +31,13 @@ const authenticateToken = async (req, res, next) => {
 // Create new student
 router.post('/create', authenticateToken, async (req, res) => {
   try {
-    const { name, email, personal_email, password, course, contact, enrollment_date } = req.body;
+    const { name, email, personal_email, password, course_id, contact, enrollment_date } = req.body;
 
     // Validate required fields
-    if (!name || !email || !password || !course || !contact || !enrollment_date) {
+    if (!name || !email || !password || !course_id || !contact || !enrollment_date) {
       return res.status(400).json({ 
         error: 'Missing required fields',
-        required: ['name', 'email', 'password', 'course', 'contact', 'enrollment_date']
+        required: ['name', 'email', 'password', 'course_id', 'contact', 'enrollment_date']
       });
     }
 
@@ -102,13 +107,25 @@ router.post('/create', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'College not found for this domain' });
     }
 
-    // Create student object
+    // Validate course_id and get course name
+    const { data: course, error: courseError } = await supabase
+      .from('courses')
+      .select('id, name, code')
+      .eq('id', course_id)
+      .eq('college_id', college.id)
+      .single();
+
+    if (courseError || !course) {
+      return res.status(400).json({ error: 'Course not found or not from this college' });
+    }
+
+    // Create student object (include both course_id and course name)
     const studentData = {
       name: name.trim(),
       email: email.toLowerCase(),
       personal_email: personal_email ? personal_email.toLowerCase() : null,
       password_hash,
-      course,
+      course: course.name, // Store course name for display
       contact,
       enrollment_date: enrollment_date,
       college_id: college.id,
@@ -130,6 +147,41 @@ router.post('/create', authenticateToken, async (req, res) => {
       });
     }
 
+    // Create entry in student_courses table
+    const { error: studentCourseError } = await supabase
+      .from('student_courses')
+      .insert([{
+        student_id: newStudent.id,
+        course_id: course_id
+      }]);
+
+    if (studentCourseError) {
+      console.error('Error creating student-course relationship:', studentCourseError);
+      // Note: We don't fail the entire operation if this fails, just log it
+    }
+
+    // Get all subjects for this course and enroll student in them
+    const { data: courseSubjects, error: subjectsError } = await supabase
+      .from('subjects')
+      .select('id')
+      .eq('course_id', course_id);
+
+    if (!subjectsError && courseSubjects && courseSubjects.length > 0) {
+      const studentSubjectEntries = courseSubjects.map(subject => ({
+        student_id: newStudent.id,
+        subject_id: subject.id
+      }));
+
+      const { error: studentSubjectError } = await supabase
+        .from('student_subjects')
+        .insert(studentSubjectEntries);
+
+      if (studentSubjectError) {
+        console.error('Error creating student-subject relationships:', studentSubjectError);
+        // Note: We don't fail the entire operation if this fails, just log it
+      }
+    }
+
     res.status(201).json({
       message: 'Student created successfully',
       student: {
@@ -142,6 +194,11 @@ router.post('/create', authenticateToken, async (req, res) => {
         enrollment_date: newStudent.enrollment_date,
         college_id: newStudent.college_id,
         created_at: newStudent.created_at
+      },
+      course: {
+        id: course.id,
+        name: course.name,
+        code: course.code
       },
       credentials: {
         email: newStudent.email,
@@ -172,7 +229,7 @@ router.get('/', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'College not found' });
     }
 
-    // Get students for this college
+    // Get students for this college (include course field)
     const { data: students, error } = await supabase
       .from('students')
       .select('id, name, email, personal_email, course, contact, enrollment_date, created_at')
@@ -191,6 +248,166 @@ router.get('/', authenticateToken, async (req, res) => {
 
   } catch (error) {
     console.error('Get students error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update student's face descriptor
+router.put('/face-descriptor', authenticateToken, async (req, res) => {
+  try {
+    const { faceDescriptor } = req.body;
+    const studentEmail = req.user.email;
+
+    // Validate face descriptor
+    if (!faceDescriptor || !Array.isArray(faceDescriptor)) {
+      return res.status(400).json({ 
+        error: 'Face descriptor is required and must be an array' 
+      });
+    }
+
+    // Check if face descriptor has the correct length (128 for face-api.js)
+    if (faceDescriptor.length !== 128) {
+      return res.status(400).json({ 
+        error: 'Invalid face descriptor format. Expected 128 values.' 
+      });
+    }
+
+    // Get student's details
+    const { data: student, error: studentError } = await supabase
+      .from('students')
+      .select('id, name, email')
+      .eq('email', studentEmail)
+      .single();
+
+    if (studentError || !student) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    // Update the student's face descriptor
+    const { data: updatedStudent, error: updateError } = await supabase
+      .from('students')
+      .update({ 
+        face_descriptor: faceDescriptor 
+      })
+      .eq('id', student.id)
+      .select('id, name, email')
+      .single();
+
+    if (updateError) {
+      console.error('Error updating face descriptor:', updateError);
+      return res.status(500).json({ error: 'Failed to save face descriptor' });
+    }
+
+    res.json({ 
+      message: 'Face descriptor saved successfully',
+      student: updatedStudent
+    });
+
+  } catch (error) {
+    console.error('Error in PUT /student/face-descriptor:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get student's face descriptor (for verification)
+router.get('/face-descriptor', authenticateToken, async (req, res) => {
+  try {
+    const studentEmail = req.user.email;
+
+    // Get student's face descriptor
+    const { data: student, error } = await supabase
+      .from('students')
+      .select('id, name, email, face_descriptor')
+      .eq('email', studentEmail)
+      .single();
+
+    if (error || !student) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    res.json({ 
+      hasFaceDescriptor: !!student.face_descriptor,
+      student: {
+        id: student.id,
+        name: student.name,
+        email: student.email
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in GET /student/face-descriptor:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get student's face descriptor data
+router.get('/face-descriptor-data', authenticateToken, async (req, res) => {
+  try {
+    const studentEmail = req.user.email;
+
+    // Get student's face descriptor
+    const { data: student, error } = await supabase
+      .from('students')
+      .select('id, name, email, face_descriptor')
+      .eq('email', studentEmail)
+      .single();
+
+    if (error || !student) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    if (!student.face_descriptor) {
+      return res.status(404).json({ error: 'No face descriptor found' });
+    }
+
+    res.json({ 
+      faceDescriptor: student.face_descriptor,
+      student: {
+        id: student.id,
+        name: student.name,
+        email: student.email
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in GET /student/face-descriptor-data:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get all courses for student enrollment
+router.get('/courses', authenticateToken, async (req, res) => {
+  try {
+    // Get admin's college_id
+    const adminEmail = req.user.email;
+    const domain = adminEmail.split('@')[1].split('.')[0];
+    
+    const { data: college, error: collegeError } = await supabase
+      .from('colleges')
+      .select('id')
+      .eq('domain', domain)
+      .single();
+
+    if (collegeError || !college) {
+      return res.status(400).json({ error: 'College not found' });
+    }
+
+    // Get courses for this college
+    const { data: courses, error } = await supabase
+      .from('courses')
+      .select('id, name, code, description')
+      .eq('college_id', college.id)
+      .order('name');
+
+    if (error) {
+      console.error('Error fetching courses:', error);
+      return res.status(400).json({ error: 'Failed to fetch courses' });
+    }
+
+    res.json({ courses });
+
+  } catch (error) {
+    console.error('Get courses error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -288,9 +505,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
       console.error('Student update error:', updateError);
       return res.status(400).json({ error: 'Failed to update student', details: updateError.message });
     }
-
     res.json({
-      message: 'Student updated successfully',
+       message: 'Student updated successfully',
       student: updatedStudent
     });
 
@@ -331,6 +547,29 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 
   } catch (error) {
     console.error('Delete student error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get student profile (for logged-in student)
+router.get('/profile', authenticateToken, async (req, res) => {
+  try {
+    const studentEmail = req.user.email;
+
+    const { data: student, error } = await supabase
+      .from('students')
+      .select('id, name, email, personal_email, course, contact, enrollment_date, created_at')
+      .eq('email', studentEmail)
+      .single();
+
+    if (error || !student) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    res.json({ student });
+
+  } catch (error) {
+    console.error('Get student profile error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
