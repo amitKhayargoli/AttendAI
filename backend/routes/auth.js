@@ -139,7 +139,12 @@ router.post('/register-admin', async (req, res) => {
 
     // 5. Generate JWT
     const token = jwt.sign(
-      { userId: admin.id, email: admin.email, userType: 'admin' },
+      { 
+        userId: admin.id, 
+        email: admin.email, 
+        userType: 'admin',
+        college_id: admin.college_id 
+      },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
@@ -214,9 +219,14 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Generate JWT token
+    // Generate JWT token with college_id included
     const token = jwt.sign(
-      { userId: user.id, email: user.email, userType },
+      { 
+        userId: user.id, 
+        email: user.email, 
+        userType,
+        college_id: user.college_id 
+      },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
@@ -227,7 +237,8 @@ router.post('/login', async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
-        userType
+        userType,
+        college_id: user.college_id
       },
       token
     });

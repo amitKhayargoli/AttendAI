@@ -11,6 +11,37 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // GET all classes with subject and teacher details
 router.get('/', authenticateToken, async (req, res) => {
   try {
+    // Get college_id based on user type
+    let college_id;
+    const userEmail = req.user.email;
+    const userType = req.user.userType;
+
+    if (userType === 'admin') {
+      const { data: admin } = await supabase
+        .from('admins')
+        .select('college_id')
+        .eq('email', userEmail)
+        .single();
+
+      if (!admin) {
+        return res.status(403).json({ error: 'Admin not found' });
+      }
+      college_id = admin.college_id;
+    } else if (userType === 'teacher') {
+      const { data: teacher } = await supabase
+        .from('teachers')
+        .select('college_id')
+        .eq('email', userEmail)
+        .single();
+
+      if (!teacher) {
+        return res.status(403).json({ error: 'Teacher not found' });
+      }
+      college_id = teacher.college_id;
+    } else {
+      return res.status(403).json({ error: 'Unauthorized user type' });
+    }
+
     const { data: classes, error } = await supabase
       .from('classes')
       .select(`
@@ -18,6 +49,7 @@ router.get('/', authenticateToken, async (req, res) => {
         subjects:subject_id(name),
         teachers:teacher_id(name)
       `)
+      .eq('college_id', college_id) // Filter by college
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -151,19 +183,40 @@ router.post('/create', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'End time must be after start time' });
     }
 
-    // Get admin's college_id from token
-    const adminEmail = req.user.email;
-    const { data: admin } = await supabase
-      .from('admins')
-      .select('college_id')
-      .eq('email', adminEmail)
-      .single();
+    // Get college_id based on user type (admin or teacher)
+    let college_id;
+    const userEmail = req.user.email;
+    const userType = req.user.userType;
 
-    if (!admin) {
-      return res.status(403).json({ error: 'Admin not found' });
+    if (userType === 'admin') {
+      // For admin, get college_id from admin table
+      const { data: admin } = await supabase
+        .from('admins')
+        .select('college_id')
+        .eq('email', userEmail)
+        .single();
+
+      if (!admin) {
+        return res.status(403).json({ error: 'Admin not found' });
+      }
+      college_id = admin.college_id;
+    } else if (userType === 'teacher') {
+      // For teacher, get college_id from teacher table
+      const { data: teacher } = await supabase
+        .from('teachers')
+        .select('college_id')
+        .eq('email', userEmail)
+        .single();
+
+      if (!teacher) {
+        return res.status(403).json({ error: 'Teacher not found' });
+      }
+      college_id = teacher.college_id;
+    } else {
+      return res.status(403).json({ error: 'Unauthorized user type' });
     }
 
-    // Check if subject exists and belongs to admin's college
+    // Check if subject exists and belongs to the same college
     const { data: subject } = await supabase
       .from('subjects')
       .select('id, college_id')
@@ -174,11 +227,11 @@ router.post('/create', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Subject not found' });
     }
 
-    if (subject.college_id !== admin.college_id) {
+    if (subject.college_id !== college_id) {
       return res.status(403).json({ error: 'Access denied to this subject' });
     }
 
-    // Check if teacher exists and belongs to admin's college
+    // Check if teacher exists and belongs to the same college
     const { data: teacher } = await supabase
       .from('teachers')
       .select('id, college_id')
@@ -189,11 +242,25 @@ router.post('/create', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Teacher not found' });
     }
 
-    if (teacher.college_id !== admin.college_id) {
+    if (teacher.college_id !== college_id) {
       return res.status(403).json({ error: 'Access denied to this teacher' });
     }
 
-    // Check for time conflicts (optional - you can remove this if not needed)
+    // For teachers, ensure they can only create classes for themselves
+    if (userType === 'teacher') {
+      const { data: currentTeacher } = await supabase
+        .from('teachers')
+        .select('id')
+        .eq('email', userEmail)
+        .single();
+
+      if (currentTeacher.id !== teacher_id) {
+        return res.status(403).json({ error: 'Teachers can only create classes for themselves' });
+      }
+    }
+
+    // Remove or comment out this entire block
+    /*
     const { data: conflictingClasses } = await supabase
       .from('classes')
       .select('id, name, start_time, end_time, schedule_day')
@@ -206,6 +273,7 @@ router.post('/create', authenticateToken, async (req, res) => {
         error: 'Time conflict detected. Teacher has another class at this time.' 
       });
     }
+    */
 
     // Create the class
     const { data: newClass, error: createError } = await supabase
@@ -218,7 +286,7 @@ router.post('/create', authenticateToken, async (req, res) => {
         start_time,
         end_time,
         room_number: room_number.trim(),
-        college_id: admin.college_id
+        college_id: college_id
       })
       .select(`
         *,
@@ -537,6 +605,112 @@ router.get('/teacher/:teacherId', authenticateToken, async (req, res) => {
   }
 });
 
+// GET classes for student (based on student's enrolled subjects)
+router.get('/student/classes', authenticateToken, async (req, res) => {
+  try {
+    const studentEmail = req.user.email;
+
+    // Get student's details and enrolled subjects
+    const { data: student, error: studentError } = await supabase
+      .from('students')
+      .select('id, name, email, college_id')
+      .eq('email', studentEmail)
+      .single();
+
+    if (studentError || !student) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    // Get student's enrolled subjects
+    const { data: enrolledSubjects, error: subjectsError } = await supabase
+      .from('student_subjects')
+      .select('subject_id')
+      .eq('student_id', student.id);
+
+    if (subjectsError) {
+      console.error('Error fetching student subjects:', subjectsError);
+      return res.status(500).json({ error: 'Failed to fetch student subjects' });
+    }
+
+    const subjectIds = enrolledSubjects.map(es => es.subject_id);
+
+    if (subjectIds.length === 0) {
+      return res.json({ classes: [] });
+    }
+
+    // Get classes for the student's enrolled subjects
+    const { data: classes, error } = await supabase
+      .from('classes')
+      .select(`
+        *,
+        subjects:subject_id(name, code),
+        teachers:teacher_id(name, email)
+      `)
+      .in('subject_id', subjectIds)
+      .eq('college_id', student.college_id)
+      .order('schedule_day', { ascending: true })
+      .order('start_time', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching student classes:', error);
+      return res.status(500).json({ error: 'Failed to fetch classes' });
+    }
+
+    // Transform classes and add attendance status
+    const transformedClasses = classes.map(classItem => {
+      // Determine if class is active based on current time and schedule
+      const now = new Date();
+      const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
+      const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
+      
+      let status = 'upcoming';
+      let canMarkAttendance = false;
+      
+      if (classItem.schedule_day === currentDay) {
+        if (currentTime >= classItem.start_time && currentTime <= classItem.end_time) {
+          status = 'active';
+          canMarkAttendance = true;
+        } else if (currentTime < classItem.start_time) {
+          status = 'upcoming';
+          canMarkAttendance = false;
+        } else {
+          status = 'recorded';
+          canMarkAttendance = false;
+        }
+      } else {
+        status = 'upcoming';
+        canMarkAttendance = false;
+      }
+
+      return {
+        id: classItem.id,
+        title: classItem.name,
+        description: classItem.subjects?.name || 'No Subject',
+        teacher: classItem.teachers?.name || 'No Teacher',
+        schedule: `${classItem.schedule_day}, ${classItem.start_time} - ${classItem.end_time}`,
+        room: classItem.room_number,
+        status,
+        canMarkAttendance,
+        lastUpdated: new Date(classItem.created_at).toLocaleDateString(),
+        // Additional fields for better display
+        subjectName: classItem.subjects?.name || 'No Subject',
+        subjectCode: classItem.subjects?.code || '',
+        teacherName: classItem.teachers?.name || 'No Teacher',
+        teacherEmail: classItem.teachers?.email || '',
+        scheduleDay: classItem.schedule_day,
+        startTime: classItem.start_time,
+        endTime: classItem.end_time,
+        roomNumber: classItem.room_number
+      };
+    });
+
+    res.json({ classes: transformedClasses });
+  } catch (error) {
+    console.error('Error in GET /classes/student/classes:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // GET classes by subject
 router.get('/subject/:subjectId', authenticateToken, async (req, res) => {
   try {
@@ -576,6 +750,29 @@ router.get('/subject/:subjectId', authenticateToken, async (req, res) => {
     res.json({ classes: transformedClasses });
   } catch (error) {
     console.error('Error in GET /classes/subject/:subjectId:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get teacher profile (for logged-in teacher)
+router.get('/profile', authenticateToken, async (req, res) => {
+  try {
+    const teacherEmail = req.user.email;
+
+    const { data: teacher, error } = await supabase
+      .from('teachers')
+      .select('id, name, email, personal_email, contact, joined_at, created_at')
+      .eq('email', teacherEmail)
+      .single();
+
+    if (error || !teacher) {
+      return res.status(404).json({ error: 'Teacher not found' });
+    }
+
+    res.json({ teacher });
+
+  } catch (error) {
+    console.error('Get teacher profile error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
