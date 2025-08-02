@@ -11,8 +11,13 @@ import Subjects from "./pages/Subjects";
 import Classes from "./pages/Classes";
 import ClassTimeline from "./pages/ClassTimeline";
 import AttendanceSession from "./pages/AttendanceSession";
-import { useState } from "react";
 import StudentDashboard from "./pages/StudentDashboard";
+import StudentAttendance from "./pages/StudentAttendance";
+import FaceRegistration from "./pages/FaceRegistration";
+// import AttendanceModal from "./components/AttendanceModal";
+import { useState } from "react";
+import Courses from "./pages/Courses";
+
 
 function App() {
   const [userRole, setUserRole] = useState("Student");
@@ -24,13 +29,17 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/reset-password" element={<Resetpassword />} />
-        <Route path="/dashboard" element={<Dashboard/>} />
+
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/student-dashboard" element={<StudentDashboard />} />
+        <Route path="/student-attendance" element={<StudentAttendance />} />
+        <Route path="/face-registration" element={<FaceRegistration />} />
+        {/* <Route path="/attendance-modal" element={<AttendanceModalTest />} /> */}
         <Route path="/students" element={<Students />} />
         <Route path="/teachers" element={<Teachers />} />
         <Route path="/subjects" element={<Subjects />} />
         <Route path="/classes" element={<Classes />} />
+        <Route path="/courses" element={<Courses />} />
         <Route path="/class-timeline" element={<ClassTimeline />} />
         <Route path="/attendance-session" element={<AttendanceSession />} />
       </Routes>
