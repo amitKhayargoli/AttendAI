@@ -24,7 +24,7 @@ const authenticateToken = async (req, res, next) => {
 // Create new subject
 router.post('/create', authenticateToken, async (req, res) => {
   try {
-    const { name, code, level, teacher_id } = req.body;
+    const { name, code, level, teacher_id, course_id } = req.body;
 
     // Validate required fields
     if (!name || !code || !level) {
@@ -86,12 +86,27 @@ router.post('/create', authenticateToken, async (req, res) => {
       }
     }
 
+    // Validate course_id if provided
+    if (course_id) {
+      const { data: course, error: courseError } = await supabase
+        .from('courses')
+        .select('id')
+        .eq('id', course_id)
+        .eq('college_id', college.id)
+        .single();
+
+      if (courseError || !course) {
+        return res.status(400).json({ error: 'Course not found or not from this college' });
+      }
+    }
+
     // Create subject object
     const subjectData = {
       name: name.trim(),
       code: code.toUpperCase(),
       level,
       teacher_id: teacher_id || null,
+      course_id: course_id || null,
       college_id: college.id
     };
 
@@ -99,7 +114,7 @@ router.post('/create', authenticateToken, async (req, res) => {
     const { data: newSubject, error: insertError } = await supabase
       .from('subjects')
       .insert([subjectData])
-      .select('id, name, code, level, teacher_id, college_id, created_at')
+      .select('id, name, code, level, teacher_id, course_id, college_id, created_at')
       .single();
 
     if (insertError) {
@@ -110,6 +125,21 @@ router.post('/create', authenticateToken, async (req, res) => {
       });
     }
 
+    // If teacher_id is provided, create entry in teachers_subjects table
+    if (teacher_id) {
+      const { error: teacherSubjectError } = await supabase
+        .from('teachers_subjects')
+        .insert([{
+          teacher_id: teacher_id,
+          subject_id: newSubject.id
+        }]);
+
+      if (teacherSubjectError) {
+        console.error('Error creating teacher-subject relationship:', teacherSubjectError);
+        // Note: We don't fail the entire operation if this fails, just log it
+      }
+    }
+
     res.status(201).json({
       message: 'Subject created successfully',
       subject: {
@@ -118,6 +148,7 @@ router.post('/create', authenticateToken, async (req, res) => {
         code: newSubject.code,
         level: newSubject.level,
         teacher_id: newSubject.teacher_id,
+        course_id: newSubject.course_id,
         college_id: newSubject.college_id,
         created_at: newSubject.created_at
       }
@@ -146,7 +177,7 @@ router.get('/', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'College not found' });
     }
 
-    // Get subjects for this college with teacher information
+    // Get subjects for this college with teacher and course information
     const { data: subjects, error } = await supabase
       .from('subjects')
       .select(`
@@ -155,8 +186,10 @@ router.get('/', authenticateToken, async (req, res) => {
         code, 
         level, 
         teacher_id, 
+        course_id,
         created_at,
-        teachers!inner(name)
+        teachers!inner(name),
+        courses!inner(name, code)
       `)
       .eq('college_id', college.id)
       .order('created_at', { ascending: false });
@@ -166,7 +199,7 @@ router.get('/', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Failed to fetch subjects' });
     }
 
-    // Format the response to include teacher name
+    // Format the response to include teacher and course names
     const formattedSubjects = subjects.map(subject => ({
       id: subject.id,
       name: subject.name,
@@ -174,6 +207,9 @@ router.get('/', authenticateToken, async (req, res) => {
       level: subject.level,
       teacher_id: subject.teacher_id,
       teacher_name: subject.teachers?.name || 'Unassigned',
+      course_id: subject.course_id,
+      course_name: subject.courses?.name || null,
+      course_code: subject.courses?.code || null,
       created_at: subject.created_at
     }));
 
