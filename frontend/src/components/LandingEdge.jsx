@@ -8,7 +8,7 @@ const LandingEdge = () => {
         {/* Header Section */}
         <div className="text-center mb-20">
           <div className="inline-block bg-purple-200 text-purple-800 px-6 py-3 rounded-full text-sm font-medium mb-8">
-            Core Features
+            Overview
           </div>
           
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-8">

@@ -9,7 +9,7 @@ export const LandingNavbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-1/2 transform -translate-x-1/2 z-50 bg-white/10 backdrop-blur-xl rounded-full py-3 px-16 shadow-lg border border-white/20 mt-4">
+    <nav className="fixed top-0 left-1/2 transform -translate-x-1/2 z-50 bg-white/10 backdrop-blur-xl rounded-full py-3 px-16 shadow-lg border border-white/20 sm:mt-4">
       <div className="flex justify-between items-center min-w-[800px]">
         {/* Left - Logo */}
         <div className="flex items-center flex-shrink-0">
@@ -18,14 +18,13 @@ export const LandingNavbar = () => {
         
         {/* Center - Navigation Links */}
         <div className="hidden lg:flex items-center space-x-8">
-          <a href="#" className="text-black hover:text-gray-600">Features</a>
-          <a href="#" className="text-black hover:text-gray-600">Pricing</a>
-          <a href="#" className="text-black hover:text-gray-600">Contact</a>
+
+
         </div>
         
         {/* Right - Login Button */}
         <div className="hidden lg:flex items-center">
-          <a href="#" className="bg-purple-500 hover:bg-purple-600 text-white py-2 px-6 rounded-full font-medium transition-colors duration-200">
+          <a href="/login" className="bg-purple-500 hover:bg-purple-600 text-white py-2 px-6 rounded-full font-medium transition-colors duration-200">
             Login
           </a>
         </div>

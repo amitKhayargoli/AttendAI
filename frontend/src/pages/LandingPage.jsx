@@ -10,6 +10,7 @@ const Landing = () => {
       <LandingNavbar />
       <LandingHero />
       <LandingEdge />
+      <LandingFeatures />
       <LandingFooter />
     </div>
   );

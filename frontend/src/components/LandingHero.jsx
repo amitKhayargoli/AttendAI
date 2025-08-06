@@ -1,11 +1,74 @@
-import React from "react";
-import { Users, BookOpen, GraduationCap } from "lucide-react";
+import React, { useState } from "react";
+import { Users, BookOpen, GraduationCap, Mail, Phone, X } from "lucide-react";
+import { Link } from "react-router-dom";
+
+const ContactModal = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          <X size={24} />
+        </button>
+
+        {/* Modal Content */}
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Get Started with AttendAI</h2>
+          
+          <div className="space-y-6">
+            {/* Email Section */}
+            <div className="flex items-center justify-center space-x-3 p-4 bg-purple-50 rounded-lg">
+              <Mail className="w-5 h-5 text-purple-600" />
+              <div className="text-left">
+                <p className="text-sm text-gray-600">Email us at</p>
+                <p className="font-semibold text-gray-900">contact@attendai.com</p>
+              </div>
+            </div>
+
+            {/* Phone Section */}
+            <div className="flex items-center justify-center space-x-3 p-4 bg-purple-50 rounded-lg">
+              <Phone className="w-5 h-5 text-purple-600" />
+              <div className="text-left">
+                <p className="text-sm text-gray-600">Call us at</p>
+                <p className="font-semibold text-gray-900">+1 (555) 123-4567</p>
+              </div>
+            </div>
+
+            {/* Additional Info */}
+            <div className="text-sm text-gray-600 space-y-2">
+              <p>Our team is available Monday-Friday, 9AM-6PM</p>
+              <p>We'll get back to you within 24 hours</p>
+            </div>
+
+            {/* CTA Button */}
+            <button
+              onClick={onClose}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 px-6 rounded-full font-semibold transition-colors duration-200"
+            >
+              Got it, thanks!
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const LandingHero = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+
   return (
     <div
       id="hero-section"
-      className="min-h-screen bg-gradient-to-b mt-10 from-white via-purple-50 to-purple-100 py-8 md:py-16 px-4 md:px-20 font-inter"
+      className="min-h-screen bg-gradient-to-b from-white via-purple-50 to-purple-100 !pt-20 md:py-16 px-4 md:px-20 font-inter"
     >
       <div className="max-w-7xl mx-auto">
         {/* Main Content */}
@@ -24,10 +87,14 @@ const LandingHero = () => {
 
             {/* Call-to-Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all duration-200 shadow-lg hover:shadow-xl">
-                Sign up
-              </button>
-              <button className="border-2 border-purple-600 text-purple-600 hover:bg-purple-600 hover:text-white px-8 py-4 rounded-full font-semibold text-lg transition-all duration-200">
+              <Link to="/signup">
+                <button 
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  Sign up
+                </button>
+              </Link>
+              <button onClick={openModal} className="border-2 border-purple-600 text-purple-600 hover:bg-purple-600 hover:text-white px-8 py-4 rounded-full font-semibold text-lg transition-all duration-200">
                 Request a demo
               </button>
             </div>
@@ -115,6 +182,9 @@ const LandingHero = () => {
           </div>
         </div>
       </div>
+
+      {/* Contact Modal */}
+      <ContactModal isOpen={isModalOpen} onClose={closeModal} />
     </div>
   );
 };
