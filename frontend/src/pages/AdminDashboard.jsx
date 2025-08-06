@@ -1,5 +1,5 @@
 import React from "react";
-import Sidebar from "../Sidebar";
+import AdminSidebar from "../AdminSidebar";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartLineDots } from "@/components/ChartLineDots";
 import EventCalendarCard from "@/components/EventCalendarCard";
@@ -54,8 +54,8 @@ function StatsCard({ label, value, svg }) {
 const AdminDashboard = () => {
   return (
     <div className="min-h-screen flex" style={{ background: "#f8f9fa" }}>
-      <Sidebar />
-      <div className="flex flex-col gap-2 flex-2 border-l-2 border-[#E5E7EB]">
+      <AdminSidebar />
+      <div className="flex flex-col gap-2 flex-2">
         <nav className="flex py-3 w-full justify-between items-center px-5 bg-white">
           <div>
             <h1 className="text-md font-medium text-black">Dashboard</h1>

@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const supabase = require('../config/supabase');
 const { v4: uuidv4 } = require('uuid');
+const { sendOTPEmail } = require('../utils/emailService');
 
 const router = express.Router();
 
@@ -138,7 +139,12 @@ router.post('/register-admin', async (req, res) => {
 
     // 5. Generate JWT
     const token = jwt.sign(
-      { userId: admin.id, email: admin.email, userType: 'admin' },
+      { 
+        userId: admin.id, 
+        email: admin.email, 
+        userType: 'admin',
+        college_id: admin.college_id 
+      },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
@@ -213,9 +219,14 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Generate JWT token
+    // Generate JWT token with college_id included
     const token = jwt.sign(
-      { userId: user.id, email: user.email, userType },
+      { 
+        userId: user.id, 
+        email: user.email, 
+        userType,
+        college_id: user.college_id 
+      },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
@@ -226,7 +237,8 @@ router.post('/login', async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
-        userType
+        userType,
+        college_id: user.college_id
       },
       token
     });
@@ -285,6 +297,273 @@ router.post('/admin-login', async (req, res) => {
 
   } catch (error) {
     console.error('Admin login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Request OTP for password reset
+router.post('/request-otp', async (req, res) => {
+  try {
+    const { personal_email } = req.body;
+
+    if (!personal_email) {
+      return res.status(400).json({ error: 'Personal email is required' });
+    }
+
+    // Check if user exists with this personal email
+    let user = null;
+    let userType = null;
+
+    // Check in students table
+    const { data: student } = await supabase
+      .from('students')
+      .select('id, name, personal_email')
+      .eq('personal_email', personal_email)
+      .single();
+
+    if (student) {
+      user = student;
+      userType = 'student';
+    } else {
+      // Check in teachers table
+      const { data: teacher } = await supabase
+        .from('teachers')
+        .select('id, name, personal_email')
+        .eq('personal_email', personal_email)
+        .single();
+
+      if (teacher) {
+        user = teacher;
+        userType = 'teacher';
+      } else {
+        // Check in admins table
+        const { data: admin } = await supabase
+          .from('admins')
+          .select('id, name, email')
+          .eq('email', personal_email)
+          .single();
+
+        if (admin) {
+          user = admin;
+          userType = 'admin';
+        }
+      }
+    }
+
+    if (!user) {
+      return res.status(404).json({ error: 'No user found with this email address' });
+    }
+
+    // Generate 6-digit OTP
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 1 * 60 * 1000); // 1 minute from now
+
+    // Delete any existing OTP requests for this email
+    await supabase
+      .from('otp_requests')
+      .delete()
+      .eq('personal_email', personal_email);
+
+    // Create new OTP request
+    const { error: otpError } = await supabase
+      .from('otp_requests')
+      .insert({
+        personal_email,
+        otp_code: otpCode,
+        expires_at: expiresAt.toISOString()
+      });
+
+    if (otpError) {
+      console.error('Error creating OTP:', otpError);
+      return res.status(500).json({ error: 'Failed to create OTP' });
+    }
+
+    // Send OTP via email
+    const emailResult = await sendOTPEmail(personal_email, otpCode);
+    
+    if (!emailResult.success) {
+      console.error('Email sending failed:', emailResult.message);
+      return res.status(500).json({ 
+        error: 'Failed to send OTP email',
+        details: emailResult.message 
+      });
+    }
+
+    res.json({
+      message: 'OTP sent successfully to your email',
+      otp: process.env.NODE_ENV === 'development' ? otpCode : undefined,
+      expires_in: '1 minute'
+    });
+
+  } catch (error) {
+    console.error('OTP request error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Verify OTP
+router.post('/verify-otp', async (req, res) => {
+  try {
+    const { personal_email, otp_code } = req.body;
+
+    if (!personal_email || !otp_code) {
+      return res.status(400).json({ error: 'Personal email and OTP code are required' });
+    }
+
+    // Find the OTP request
+    const { data: otpRequest, error } = await supabase
+      .from('otp_requests')
+      .select('*')
+      .eq('personal_email', personal_email)
+      .eq('otp_code', otp_code)
+      .single();
+
+    if (error || !otpRequest) {
+      return res.status(400).json({ error: 'Invalid OTP code' });
+    }
+
+    // Check if OTP has expired
+    const now = new Date();
+    const expiresAt = new Date(otpRequest.expires_at);
+    
+    if (now > expiresAt) {
+      // Delete expired OTP
+      await supabase
+        .from('otp_requests')
+        .delete()
+        .eq('id', otpRequest.id);
+      
+      return res.status(400).json({ error: 'OTP has expired' });
+    }
+
+    // Delete the OTP after successful verification
+    await supabase
+      .from('otp_requests')
+      .delete()
+      .eq('id', otpRequest.id);
+
+    // Generate a temporary reset token (valid for 15 minutes)
+    const resetToken = jwt.sign(
+      { 
+        personal_email, 
+        purpose: 'password_reset',
+        type: 'reset_token'
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    res.json({
+      message: 'OTP verified successfully',
+      reset_token: resetToken,
+      expires_in: '15 minutes'
+    });
+
+  } catch (error) {
+    console.error('OTP verification error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Reset password with token
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { reset_token, new_password } = req.body;
+
+    if (!reset_token || !new_password) {
+      return res.status(400).json({ error: 'Reset token and new password are required' });
+    }
+
+    // Verify reset token
+    let decoded;
+    try {
+      decoded = jwt.verify(reset_token, process.env.JWT_SECRET);
+    } catch (error) {
+      return res.status(400).json({ error: 'Invalid or expired reset token' });
+    }
+
+    if (decoded.purpose !== 'password_reset' || decoded.type !== 'reset_token') {
+      return res.status(400).json({ error: 'Invalid reset token' });
+    }
+
+    const { personal_email } = decoded;
+
+    console.log('Attempting to reset password for email:', personal_email);
+
+    // Hash new password
+    const passwordHash = await bcrypt.hash(new_password, 10);
+
+    // Find and update user
+    let updated = false;
+
+    // Try to update in students table
+    const { data: student, error: studentError } = await supabase
+      .from('students')
+      .update({ password_hash: passwordHash })
+      .eq('personal_email', personal_email)
+      .select('id')
+      .single();
+
+    if (student && !studentError) {
+      updated = true;
+      console.log('Student password updated successfully');
+    } else if (studentError && studentError.code !== 'PGRST116') {
+      // PGRST116 means no rows found, which is expected if user is not in students table
+      console.error('Error updating student password:', studentError);
+    } else if (studentError && studentError.code === 'PGRST116') {
+      console.log('No student found with personal_email:', personal_email);
+    }
+
+    if (!updated) {
+      // Try to update in teachers table
+      const { data: teacher, error: teacherError } = await supabase
+        .from('teachers')
+        .update({ password_hash: passwordHash })
+        .eq('personal_email', personal_email)
+        .select('id')
+        .single();
+
+      if (teacher && !teacherError) {
+        updated = true;
+        console.log('Teacher password updated successfully');
+      } else if (teacherError && teacherError.code !== 'PGRST116') {
+        console.error('Error updating teacher password:', teacherError);
+      } else if (teacherError && teacherError.code === 'PGRST116') {
+        console.log('No teacher found with personal_email:', personal_email);
+      }
+    }
+
+    if (!updated) {
+      // Try to update in admins table (admins use 'email' not 'personal_email')
+      const { data: admin, error: adminError } = await supabase
+        .from('admins')
+        .update({ password_hash: passwordHash })
+        .eq('email', personal_email)
+        .select('id')
+        .single();
+
+      if (admin && !adminError) {
+        updated = true;
+        console.log('Admin password updated successfully');
+      } else if (adminError && adminError.code !== 'PGRST116') {
+        console.error('Error updating admin password:', adminError);
+      } else if (adminError && adminError.code === 'PGRST116') {
+        console.log('No admin found with email:', personal_email);
+      }
+    }
+
+    if (!updated) {
+      console.log('No user found with email:', personal_email);
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    console.log('Password successfully updated for email:', personal_email);
+    res.json({
+      message: 'Password reset successfully'
+    });
+
+  } catch (error) {
+    console.error('Password reset error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

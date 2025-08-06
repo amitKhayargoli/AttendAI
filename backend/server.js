@@ -39,9 +39,21 @@ app.get('/', (req, res) => {
 
 // Import routes
 const authRoutes = require('./routes/auth');
+const studentRoutes = require('./routes/student');
+const teacherRoutes = require('./routes/teacher');
+const subjectRoutes = require('./routes/subject');
+const classRoutes = require('./routes/classes');
+const coursesRouter = require('./routes/courses');
+const attendanceRoutes = require('./routes/attendance');
 
 // Use routes
 app.use('/api/auth', authRoutes);
+app.use('/api/student', studentRoutes);
+app.use('/api/teacher', teacherRoutes);
+app.use('/api/subject', subjectRoutes);
+app.use('/api/class', classRoutes);
+app.use('/api/courses', coursesRouter);
+app.use('/api/attendance', attendanceRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -59,7 +71,6 @@ app.use('*', (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
 });
 

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import Sidebar from "./Sidebar";
 import { DataTable } from "./components/data-table";
 import Modal from "./components/Modal";
+import Sidebar from "./components/StudentSidebar";
 import { ChevronDown } from "lucide-react";
 import { Avatar, AvatarImage } from "./components/ui/avatar";
 
