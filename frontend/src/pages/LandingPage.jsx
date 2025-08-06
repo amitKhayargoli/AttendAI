@@ -6,11 +6,10 @@ import LandingFooter from "../components/LandingFooter.jsx";
 
 const Landing = () => {
   return (
-    <div>
+      <div className="">
       <LandingNavbar />
       <LandingHero />
       <LandingEdge />
-      <LandingFeatures />
       <LandingFooter />
     </div>
   );

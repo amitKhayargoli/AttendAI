@@ -1,110 +1,89 @@
 import React from "react";
-import { Eye, Target, Clock, Phone, Video } from "lucide-react";
+import { Shield, Zap, Users, GraduationCap, BookOpen, Award } from "lucide-react";
 
 const LandingEdge = () => {
   return (
-    <div id="Edge-section" className="py-16 px-4 md:px-20 bg-white font-inter">
+    <div id="Edge-section" className="min-h-screen bg-gradient-to-b from-white via-purple-50 to-purple-100 py-20 px-4 md:px-20 font-inter">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
-        <div className="text-center mb-16">
-          {/* Small Banner */}
-          <div className="inline-block bg-yellow-400 text-black px-4 py-2 rounded-lg transform rotate-1 mb-4">
-            <span className="text-sm font-medium">Why choose us</span>
+        <div className="text-center mb-20">
+          <div className="inline-block bg-purple-200 text-purple-800 px-6 py-3 rounded-full text-sm font-medium mb-8">
+            Core Features
           </div>
-
-          {/* Main Title */}
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-            What makes us different
+          
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-8">
+            Smart. Efficient. <span className="text-purple-600">Effortless.</span>
           </h2>
-
-          {/* Subtitle */}
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Next-level attendance tracking with unmatched accuracy, speed, and
-            ease of use.
+          
+          <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
+            Built for modern educational institutions with cutting-edge technology 
+            that transforms attendance management.
           </p>
         </div>
 
-        {/* Feature Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Card 1: Real-time Monitoring */}
-          <div className="bg-gray-200 rounded-xl shadow-lg p-6 border">
-            {/* Icon */}
-            <div className="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center mb-4">
-              <Eye className="w-6 h-6 text-white" />
+        {/* Main Feature Section - Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-20">
+          {/* Left Column - Feature Details */}
+          <div className="space-y-8">
+            <div className="flex items-start space-x-4">
+              <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Shield className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">Privacy-First Design</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Student data protection is our priority. All facial recognition data is encrypted 
+                  and processed locally, ensuring complete privacy compliance.
+                </p>
+              </div>
             </div>
 
-            {/* Title */}
-            <h3 className="text-xl font-bold text-gray-900 mb-3">
-              Real-time Monitoring
-            </h3>
-
-            {/* Description */}
-            <p className="text-gray-600 mb-6">
-              Live updates and alerts for absences or unauthorized access.
-            </p>
-
-            {/* Realtime Image */}
-            <div className="rounded-lg overflow-hidden flex justify-center">
-              <img
-                src={"/realtime.png"}
-                alt="Real-time Monitoring Interface"
-                className="w-35 h-35 object-cover"
-              />
-            </div>
-          </div>
-
-          {/* Card 2: Accurate & Reliable */}
-          <div className="bg-gray-200 rounded-xl shadow-lg p-6 border">
-            {/* Icon */}
-            <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mb-4">
-              <Target className="w-6 h-6 text-white" />
+            <div className="flex items-start space-x-4">
+              <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Zap className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">Lightning Fast</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Instant recognition and attendance marking. No more waiting in long queues 
+                  or manual roll calls. Students can check in within seconds.
+                </p>
+              </div>
             </div>
 
-            {/* Title */}
-            <h3 className="text-xl font-bold text-gray-900 mb-3">
-              Accurate & Reliable
-            </h3>
-
-            {/* Description */}
-            <p className="text-gray-600 mb-6">
-              Reduces chances of proxy attendance or buddy punching.
-            </p>
-
-            {/* Reliable Image */}
-            <div className="rounded-lg overflow-hidden flex justify-center">
-              <img
-                src={"/reliable.png"}
-                alt="Accurate & Reliable Interface"
-                className="w-35 h-35 object-cover"
-              />
+            <div className="flex items-start space-x-4">
+              <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Users className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">Scalable Solution</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  From small classrooms to large universities. Our system scales seamlessly 
+                  to handle thousands of students across multiple campuses.
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Card 3: Time Efficient */}
-          <div className="bg-gray-200 rounded-xl shadow-lg p-6 border">
-            {/* Icon */}
-            <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mb-4">
-              <Clock className="w-6 h-6 text-white" />
-            </div>
-
-            {/* Title */}
-            <h3 className="text-xl font-bold text-gray-900 mb-3">
-              Time Efficient
-            </h3>
-
-            {/* Description */}
-            <p className="text-gray-600 mb-6">
-              Speeds up check-in and check-out processes.
-            </p>
-            <div className="rounded-lg overflow-hidden flex justify-center">
+          {/* Right Column - Main Image */}
+          <div className="relative ">
+            <div className="bg-linear-to-b from-purple-50 to bg-purple-100 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-white/20">
               <img
-                src={"/time.png"}
-                alt="Time Efficient Interface"
-                className="w-35 h-35 object-cover"
+                src={"/herosection.png"}
+                alt="AttendAI Dashboard Interface"
+                className="w-full h-auto"
               />
+            </div>
+            {/* Floating Elements */}
+            <div className="absolute -top-4 -right-4 w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+              <GraduationCap className="w-4 h-4 text-white" />
+            </div>
+            <div className="absolute -bottom-4 -left-4 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+              <BookOpen className="w-4 h-4 text-white" />
             </div>
           </div>
         </div>
+       
       </div>
     </div>
   );

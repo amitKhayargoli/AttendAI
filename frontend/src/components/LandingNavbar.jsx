@@ -1,7 +1,4 @@
 import React, { useState } from "react";
-import { Link as ScrollLink } from "react-scroll"; // Import from react-scroll
-import { Link } from "react-router-dom"; // React Router for normal navigation
-import { navItems } from "./index";
 import { Menu, X } from "lucide-react";
 
 export const LandingNavbar = () => {
@@ -12,90 +9,56 @@ export const LandingNavbar = () => {
   };
 
   return (
-    <nav className="sticky top-0 z-50 rounded-full py-3 backdrop-blur-lg border-b border-neutral-700/80">
-      <div className="container px-4 mx-auto relative tx-sm">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center flex-shrink-0">
-            <img src={"/scan.png"} alt="logo" className="h-10 w-10 mr-2" />
-            <span className="text-xl tracking-tight">AttendAI</span>
-          </div>
-          <ul className="hidden lg:flex ml-14 space-x-12">
-            {navItems.map((item, index) => (
-              <li key={index}>
-                {item.href.startsWith("#") ? (
-                  <ScrollLink
-                    to={item.href.substring(1)}
-                    smooth={true}
-                    duration={500}
-                    className="cursor-pointer text-black hover:text-gray-400"
-                  >
-                    {item.label}
-                  </ScrollLink>
-                ) : (
-                  <Link
-                    to={item.href}
-                    className="text-white hover:text-gray-400"
-                  >
-                    {item.label}
-                  </Link>
-                )}
-              </li>
-            ))}
+    <nav className="fixed top-0 left-1/2 transform -translate-x-1/2 z-50 bg-white/10 backdrop-blur-xl rounded-full py-3 px-16 shadow-lg border border-white/20 mt-4">
+      <div className="flex justify-between items-center min-w-[800px]">
+        {/* Left - Logo */}
+        <div className="flex items-center flex-shrink-0">
+          <span className="text-xl font-bold text-black">AttendAI</span>
+        </div>
+        
+        {/* Center - Navigation Links */}
+        <div className="hidden lg:flex items-center space-x-8">
+          <a href="#" className="text-black hover:text-gray-600">Features</a>
+          <a href="#" className="text-black hover:text-gray-600">Pricing</a>
+          <a href="#" className="text-black hover:text-gray-600">Contact</a>
+        </div>
+        
+        {/* Right - Login Button */}
+        <div className="hidden lg:flex items-center">
+          <a href="#" className="bg-purple-500 hover:bg-purple-600 text-white py-2 px-6 rounded-full font-medium transition-colors duration-200">
+            Login
+          </a>
+        </div>
+        
+        {/* Mobile Menu Button */}
+        <div className="lg:hidden">
+          <button onClick={toggleNavbar} className="text-black">
+            {mobileDrawer ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+      </div>
+      
+      {mobileDrawer && (
+        <div className="fixed top-0 left-0 z-20 bg-white w-full h-screen p-8 flex flex-col justify-center items-center lg:hidden">
+          <ul className="space-y-6 text-center">
+
+            <li>
+              <a href="#" className="text-black hover:text-gray-600">Features</a>
+            </li>
+            <li>
+              <a href="#" className="text-black hover:text-gray-600">Pricing</a>
+            </li>
+            <li>
+              <a href="#" className="text-black hover:text-gray-600">Contact</a>
+            </li>
           </ul>
-          <div className="hidden lg:flex justify-center items-center space-x-12">
-            <Link to="/login" className="py-2 px-3 border rounded-full">
-              Log In
-            </Link>
-            <a href="#" className="bg-black text-white py-2 px-3 rounded-full">
-              Create an account
+          <div className="mt-8">
+            <a href="#" className="bg-purple-500 hover:bg-purple-600 text-white py-3 px-8 rounded-full font-medium transition-colors duration-200">
+              Login
             </a>
           </div>
-          <div className="lg:hidden md:flex flex-col justify-end">
-            <button onClick={toggleNavbar}>
-              {mobileDrawer ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
         </div>
-        {mobileDrawer && (
-          <div className="fixed right-0 z-20  bg-neutral-900 w-full p-12 flex flex-col justify-center items-center lg:hidden">
-            <ul>
-              {navItems.map((item, index) => (
-                <li key={index} className="py-4">
-                  {item.href.startsWith("#") ? (
-                    <ScrollLink
-                      to={item.href.substring(1)}
-                      smooth={true}
-                      duration={500}
-                      className="cursor-pointer text-white hover:text-gray-400"
-                      onClick={toggleNavbar}
-                    >
-                      {item.label}
-                    </ScrollLink>
-                  ) : (
-                    <Link
-                      to={item.href}
-                      className="text-white hover:text-gray-400"
-                    >
-                      {item.label}
-                    </Link>
-                  )}
-                </li>
-              ))}
-            </ul>
-            <div className="flex space-x-6">
-              <Link
-                to="/login"
-                className="py-2 px-3 border rounded-md text-white"
-              >
-                Log In
-              </Link>
-              <a href="#" className="py-2 rounded-md text-white">
-                Create an account
-              </a>
-            </div>
-          </div>
-        )}
-      </div>
+      )}
     </nav>
   );
 };
