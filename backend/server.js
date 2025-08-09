@@ -9,8 +9,19 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',')
+  : ['http://localhost:5000'];
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json());
@@ -25,19 +36,24 @@ app.get('/', (req, res) => {
   });
 });
 
-// Health check route
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK',
-    timestamp: new Date().toISOString()
-  });
-});
 
 // Import routes
 const authRoutes = require('./routes/auth');
+const studentRoutes = require('./routes/student');
+const teacherRoutes = require('./routes/teacher');
+const subjectRoutes = require('./routes/subject');
+const classRoutes = require('./routes/classes');
+const coursesRouter = require('./routes/courses');
+const attendanceRoutes = require('./routes/attendance');
 
 // Use routes
 app.use('/api/auth', authRoutes);
+app.use('/api/student', studentRoutes);
+app.use('/api/teacher', teacherRoutes);
+app.use('/api/subject', subjectRoutes);
+app.use('/api/class', classRoutes);
+app.use('/api/courses', coursesRouter);
+app.use('/api/attendance', attendanceRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -53,10 +69,11 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
+app.use(cors({ origin: true, credentials: true }));
+
+
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
 });
 
