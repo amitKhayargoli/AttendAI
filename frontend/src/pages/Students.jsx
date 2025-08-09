@@ -15,7 +15,7 @@ const Students = () => {
     enrollmentDate: '' // Changed from enrollment_date
   })
 
-  const [suggestedEmail, setSuggestedEmail] = useState('sarah.johnson@attendai.edu.np')
+  const [suggestedEmail, setSuggestedEmail] = useState('john.doe@attendai.edu.np')
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCourse, setSelectedCourse] = useState('All Courses')
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' })
