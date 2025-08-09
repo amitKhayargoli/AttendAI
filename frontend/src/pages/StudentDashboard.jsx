@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { SidebarProvider } from "@/components/ui/sidebar";
 import StudentSidebar from "./StudentSidebar";
+import { AttendanceLineChart } from './AttendanceLineChart';
 
 const StudentDashboard = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -29,10 +30,10 @@ const StudentDashboard = () => {
   ];
 
   const dailySchedule = [
-    { time: '8:00 AM', subject: 'Science', type: 'class' },
-    { time: '9:00 AM', subject: 'English', type: 'class' },
+    { time: '8:00 AM', subject: 'Data Science', type: 'class' },
+    { time: '9:00 AM', subject: 'NLP', type: 'class' },
     { time: '10:00 AM', subject: 'Break', type: 'break' },
-    { time: '10:15 AM', subject: 'Math', type: 'class' },
+    { time: '10:15 AM', subject: 'Statistics', type: 'class' },
   ];
 
   const getDaysInMonth = (date) => {
@@ -71,65 +72,10 @@ const StudentDashboard = () => {
 
             {/* Dashboard Grid */}
             <div className="grid grid-cols-12 gap-6">
-              {/* Summary Statistics */}
-              <div className="col-span-4 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <Users className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="text-2xl font-medium text-gray-900">80%</p>
-                          <p className="text-sm text-gray-500">Attendance</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
 
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                          <FileText className="h-5 w-5 text-purple-600" />
-                        </div>
-                        <div>
-                          <p className="text-2xl font-medium text-gray-900">258+</p>
-                          <p className="text-sm text-gray-500">Task Completed</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                          <Clock className="h-5 w-5 text-yellow-600" />
-                        </div>
-                        <div>
-                          <p className="text-2xl font-medium text-gray-900">64%</p>
-                          <p className="text-sm text-gray-500">Task in Progress</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
-                          <Award className="h-5 w-5 text-pink-600" />
-                        </div>
-                        <div>
-                          <p className="text-2xl font-medium text-gray-900">245</p>
-                          <p className="text-sm text-gray-500">Reward Points</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+           {/* Attendance Line Chart */}
+           <div className="col-span-6">
+                <AttendanceLineChart />
               </div>
 
               {/* Attendance Donut Chart */}
@@ -212,6 +158,8 @@ const StudentDashboard = () => {
                   </CardContent>
                 </Card>
               </div>
+
+   
             </div>
           </div>
         </div>
@@ -221,3 +169,4 @@ const StudentDashboard = () => {
 };
 
 export default StudentDashboard;
+6
