@@ -16,6 +16,8 @@ Built with modern web technologies, AttendAI offers a responsive and intuitive i
   <img alt="Supabase" src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" />
 </p>
 
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/86d8d19a-c997-4581-87b8-90593fac3b2e" />
+
 ---
 
 ## Features
