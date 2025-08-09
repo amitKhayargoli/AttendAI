@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   BarChart3, 
   Calendar, 
@@ -36,7 +36,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+
 const StudentSidebar = () => {
+
+  const navigate = useNavigate();
+
   const [user, setUser] = useState({
     name: "Loading...",
     email: "loading@student.com",
@@ -115,11 +119,7 @@ const StudentSidebar = () => {
       url: "/face-registration",
       icon: User,
     },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
+
     {
       title: "Settings",
       url: "#",
@@ -137,7 +137,7 @@ const StudentSidebar = () => {
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <Link to="/student-dashboard">
-                <span className="text-base font-semibold">AttendAI</span>
+                <span className="text-xl font-semibold">AttendAI</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -223,10 +223,11 @@ const StudentSidebar = () => {
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <MoreHorizontal className="h-4 w-4 mr-2" />
-                  Log out
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/")}>
+  <MoreHorizontal className="h-4 w-4 mr-2" />
+  Log out
+</DropdownMenuItem>
+
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>

@@ -69,6 +69,9 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
+app.use(cors({ origin: true, credentials: true }));
+
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);

@@ -5,7 +5,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import "./index.css";
-import Dashboard from "./Dashboard";
+
 import Login from "./pages/login";
 import Signup from "./pages/Signup";
 import Resetpassword from "./pages/Resetpassword";
@@ -23,10 +23,13 @@ import AttendanceSession from "./pages/AttendanceSession";
 import StudentDashboard from "./pages/StudentDashboard";
 import StudentAttendance from "./pages/StudentAttendance";
 import FaceRegistration from "./pages/FaceRegistration";
-// import AttendanceModal from "./components/AttendanceModal";
+import AttendancePage from "./pages/AttendencePage";
+import TeacherDashboard from "./pages/TeacherDashboard";
 import { useState } from "react";
 import Courses from "./pages/Courses";
-
+import Landing from "./pages/LandingPage";
+import Settings from "./pages/Settings";
+import ManageAttendance from "./pages/ManageAttendance";
 
 function App() {
   const [userRole, setUserRole] = useState("Student");
@@ -34,12 +37,10 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Navigate to="/landing" replace />} />
+
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/landing" element={<Landing />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/start" element={<StartAtt />} />
+        <Route path="/" element={<Landing />} />
         <Route path="/attendance" element={<AttendancePage />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/reset-password" element={<Resetpassword />} />
@@ -48,7 +49,9 @@ function App() {
         <Route path="/student-dashboard" element={<StudentDashboard />} />
         <Route path="/student-attendance" element={<StudentAttendance />} />
         <Route path="/face-registration" element={<FaceRegistration />} />
-        {/* <Route path="/attendance-modal" element={<AttendanceModalTest />} /> */}
+        <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
+        <Route path="/manage-attendance" element={<ManageAttendance/>}/>
+
         <Route path="/students" element={<Students />} />
         <Route path="/teachers" element={<Teachers />} />
         <Route path="/subjects" element={<Subjects />} />
@@ -56,6 +59,7 @@ function App() {
         <Route path="/courses" element={<Courses />} />
         <Route path="/class-timeline" element={<ClassTimeline />} />
         <Route path="/attendance-session" element={<AttendanceSession />} />
+        
       </Routes>
     </Router>
   );

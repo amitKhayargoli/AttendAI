@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Clock, Grid3X3, List, Loader2 } from "lucide-react";
 import AttendanceModal from "@/components/AttendanceModal";
+import StudentSidebar from './StudentSidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
 
 const StudentAttendance = () => {
   const [viewMode, setViewMode] = useState('grid');
@@ -117,7 +119,13 @@ const StudentAttendance = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    
+    <SidebarProvider>
+
+    <StudentSidebar/>
+    <div className="p-6 w-full">
+
+
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">My Classes & Attendance</h1>
@@ -277,6 +285,7 @@ const StudentAttendance = () => {
         classId={selectedClass?.id} // Make sure this is being passed
       />
     </div>
+    </SidebarProvider>
   );
 };
 

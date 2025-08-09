@@ -117,7 +117,7 @@ const AdminSidebar = () => {
       <div
         className={`${
           sidebarCollapsed ? "w-16" : "w-55"
-        } py-5 px-5 transition-all duration-300 ease-in-out bg-white`}
+        }  py-5 px-5 transition-all duration-300 ease-in-out bg-white `}
       >
         <span className="flex justify-between items-center h-10 mb-5">
           <h1

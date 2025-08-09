@@ -31,11 +31,11 @@ const ContactModal = ({ isOpen, onClose }) => {
             </div>
 
             {/* Phone Section */}
-            <div className="flex items-center justify-center space-x-3 p-4 bg-purple-50 rounded-lg">
+            <div className="flex items-center justify-center pr-24 space-x-3 p-4 bg-purple-50 rounded-lg">
               <Phone className="w-5 h-5 text-purple-600" />
               <div className="text-left">
                 <p className="text-sm text-gray-600">Call us at</p>
-                <p className="font-semibold text-gray-900">+1 (555) 123-4567</p>
+                <p className="font-semibold text-gray-900">+1 4485147 </p>
               </div>
             </div>
 
