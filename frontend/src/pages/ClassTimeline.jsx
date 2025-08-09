@@ -503,7 +503,8 @@ const ClassTimeline = () => {
 
       <div className="flex">
         {/* Left Sidebar */}
-        <div className="w-80 bg-white border-r border-gray-200 h-[calc(100vh-70px)] p-6">
+        <div     className="w-80 bg-white border-r border-gray-200 p-6 h-screen fixed top-0 left-0 overflow-y-auto"
+    style={{ height: 'calc(100vh - 70px)', paddingTop: '70px' }} >
           {/* Calendar Widget */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
@@ -581,7 +582,8 @@ const ClassTimeline = () => {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 p-6">
+        {/* <div className="flex-1 p-6"> */}
+        <div className="flex-1 ml-80 p-6 overflow-y-auto" style={{ height: 'calc(100vh - 70px)' }}>
           {/* Header */}
                      <div className="flex items-center justify-between mb-6">
              <h1 className="text-2xl font-bold text-gray-900">
